@@ -5,62 +5,72 @@ import type { AuthUser } from '@/types';
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (id: string, password: string, teams: { id: string; name: string; loginId: string; password: string }[]) => boolean;
-  logout: () => void;
+  login: (id: string, password: string) => Promise<string | null>;
+  logout: () => Promise<void>;
   isAdmin: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const _a = atob('c2RhZG1pbg==');
-const _p = atob('c2RhZG1pbkBwdw==');
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Restore session on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('authUser');
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage는 SSR에서 접근 불가하므로 useEffect에서 로드 필수
-      if (stored) setUser(JSON.parse(stored));
-    } catch { /* ignore */ }
-    setIsLoaded(true);
+    const token = sessionStorage.getItem('session_token');
+    if (!token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorage 접근은 useEffect 필수
+      setIsLoading(false);
+      return;
+    }
+    fetch('/api/auth/session', {
+      headers: { 'x-session-token': token },
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) {
+          setUser(data.user);
+        } else {
+          sessionStorage.removeItem('session_token');
+        }
+      })
+      .catch(() => {
+        sessionStorage.removeItem('session_token');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (isLoaded) {
-      if (user) {
-        localStorage.setItem('authUser', JSON.stringify(user));
-      } else {
-        localStorage.removeItem('authUser');
-      }
-    }
-  }, [user, isLoaded]);
-
-  const login = useCallback((id: string, password: string, teams: { id: string; name: string; loginId: string; password: string }[]) => {
-    // Admin login
-    if (id === _a && password === _p) {
-      setUser({ role: 'admin', name: '관리자' });
-      return true;
-    }
-    // Team login
-    const team = teams.find(t => t.loginId === id && t.password === password);
-    if (team) {
-      setUser({ role: 'team', name: team.name, teamId: team.id });
-      return true;
-    }
-    return false;
+  const login = useCallback(async (loginId: string, password: string): Promise<string | null> => {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ loginId, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) return data.error || '로그인에 실패했습니다.';
+    sessionStorage.setItem('session_token', data.token);
+    setUser(data.user);
+    return null;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    const token = sessionStorage.getItem('session_token');
+    if (token) {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'x-session-token': token },
+      }).catch(() => {});
+    }
+    sessionStorage.removeItem('session_token');
     setUser(null);
   }, []);
 
-  if (!isLoaded) return null;
+  if (isLoading) return null;
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, login, logout, isAdmin: user?.role === 'admin', isLoading }}>
       {children}
     </AuthContext.Provider>
   );

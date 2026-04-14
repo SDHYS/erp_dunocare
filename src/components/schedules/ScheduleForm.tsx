@@ -8,7 +8,7 @@ import { useAuth } from '@/store/authStore';
 
 interface ScheduleFormProps {
   schedule?: Schedule | null;
-  onSubmit: (data: Omit<Schedule, 'id'>) => void;
+  onSubmit: (data: Omit<Schedule, 'id'>) => void | Promise<void>;
   onCancel: () => void;
 }
 
@@ -98,7 +98,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let finalAssignee = form.assignee;
@@ -108,7 +108,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
       finalAssignee = newTeamName.trim();
       const exists = stores.some(s => s.name === finalAssignee);
       if (!exists) {
-        addStore({
+        await addStore({
           name: finalAssignee,
           contact: newTeamContact.trim(),
           address: '',
@@ -116,7 +116,6 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
           email: '',
           memo: '',
           loginId: '',
-          password: '',
         });
       }
     }

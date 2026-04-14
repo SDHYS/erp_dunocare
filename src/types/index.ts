@@ -33,7 +33,7 @@ export interface Store {
   email: string;
   memo: string;
   loginId: string;
-  password: string;
+  hasPassword: boolean;
 }
 
 export interface AuthUser {
@@ -41,22 +41,3 @@ export interface AuthUser {
   name: string;
   teamId?: string;
 }
-
-export const REQUEST_TYPES = [
-  '카이저제빙기청소', '4WAY에어컨청소', '매장마감청소', '어닝+간판청소',
-  '커피머신수리', '글라인더수리', '온수기수리', '매장대청소',
-  '테라장설치', '배관청소', '제빙기설치', '에어컨설치',
-  '커피머신설치', '아이스크림기계설치', '호시자키제빙기청소',
-  '아이스트로제빙기청소', '1WAY에어컨청소', '360에어컨청소',
-  '매장페인트', '인테리어보수', '어닝청소', '간판청소',
-  '유리창청소', '간판수리', '전기설비',
-  '오버홀', '디스케일', '동안세무회계가입',
-] as const;
-
-export const TEAMS = [
-  '수원에어컨팀', '제빙기전문팀', '서울일등설비',
-  'BNI김훈님', '24시짱구', '커피브로',
-  '청준만사성', '청년강원빈대표님', '용인배관팀',
-  '안양배관팀', '부산팀',
-] as const;
-

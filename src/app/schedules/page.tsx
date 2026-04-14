@@ -49,8 +49,8 @@ export default function SchedulesPage() {
     return result;
   }, [schedules, selectedDate, statusFilter, searchQuery]);
 
-  const handleAdd = (data: Omit<Schedule, 'id'>) => {
-    addSchedule(data);
+  const handleAdd = async (data: Omit<Schedule, 'id'>) => {
+    await addSchedule(data);
     setShowForm(false);
   };
 
@@ -59,16 +59,16 @@ export default function SchedulesPage() {
     setShowForm(true);
   };
 
-  const handleUpdate = (data: Omit<Schedule, 'id'>) => {
+  const handleUpdate = async (data: Omit<Schedule, 'id'>) => {
     if (editingSchedule) {
-      updateSchedule(editingSchedule.id, data);
+      await updateSchedule(editingSchedule.id, data);
       setEditingSchedule(null);
       setShowForm(false);
     }
   };
 
-  const handleStatusChange = (id: string, status: ProgressStatus) => {
-    updateSchedule(id, { progressStatus: status });
+  const handleStatusChange = async (id: string, status: ProgressStatus) => {
+    await updateSchedule(id, { progressStatus: status });
   };
 
   const clearFilters = () => {

@@ -3,27 +3,23 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/store/authStore';
-import { useScheduleStore } from '@/store/scheduleStore';
 
 export default function LoginPage() {
   const { login } = useAuth();
-  const { stores } = useScheduleStore();
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const teams = stores.map(s => ({
-      id: s.id,
-      name: s.name,
-      loginId: s.loginId || '',
-      password: s.password || '',
-    }));
-    const success = login(id, password, teams);
-    if (!success) {
-      setError('아이디 또는 비밀번호가 올바르지 않습니다.');
+    setIsSubmitting(true);
+    setError('');
+    const errorMsg = await login(id, password);
+    if (errorMsg) {
+      setError(errorMsg);
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -45,6 +41,7 @@ export default function LoginPage() {
               placeholder="아이디 입력"
               required
               autoFocus
+              disabled={isSubmitting}
             />
           </label>
           <label className="block">
@@ -56,6 +53,7 @@ export default function LoginPage() {
               className="input mt-1"
               placeholder="비밀번호 입력"
               required
+              disabled={isSubmitting}
             />
           </label>
           {error && (
@@ -63,9 +61,10 @@ export default function LoginPage() {
           )}
           <button
             type="submit"
-            className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
+            disabled={isSubmitting}
+            className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50"
           >
-            로그인
+            {isSubmitting ? '로그인 중...' : '로그인'}
           </button>
         </form>
       </div>

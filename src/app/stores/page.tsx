@@ -39,10 +39,10 @@ export default function TeamsPage() {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [selectedTeam, schedules, stores]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const data = {
+    const data: Record<string, string> = {
       name: fd.get('name') as string,
       address: fd.get('address') as string,
       contact: fd.get('contact') as string,
@@ -50,19 +50,20 @@ export default function TeamsPage() {
       email: fd.get('email') as string,
       memo: fd.get('memo') as string,
       loginId: fd.get('loginId') as string,
-      password: fd.get('password') as string,
     };
+    const pw = fd.get('password') as string;
+    if (pw) data.password = pw;
 
     if (editing) {
-      updateStore(editing.id, data);
+      await updateStore(editing.id, data);
       setEditing(null);
     } else {
-      addStore(data);
+      await addStore(data as never);
     }
     setShowForm(false);
   };
 
-  const accountCount = stores.filter(s => s.loginId).length;
+  const accountCount = stores.filter(s => s.loginId && s.hasPassword).length;
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">
@@ -170,7 +171,7 @@ export default function TeamsPage() {
                         </button>
                         {deleteConfirm === store.id ? (
                           <div className="flex gap-1">
-                            <button onClick={() => { deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
+                            <button onClick={async () => { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
                             <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">취소</button>
                           </div>
                         ) : (
@@ -350,7 +351,7 @@ export default function TeamsPage() {
                   </label>
                   <label className="block">
                     <span className="text-sm font-medium text-gray-700">비밀번호</span>
-                    <input name="password" type="password" defaultValue={editing?.password} className="input mt-1" placeholder="비밀번호" autoComplete="new-password" />
+                    <input name="password" type="password" className="input mt-1" placeholder={editing ? '변경시에만 입력' : '비밀번호'} autoComplete="new-password" />
                   </label>
                 </div>
               </div>

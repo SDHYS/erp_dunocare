@@ -23,11 +23,11 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full">
       <body className="h-full antialiased">
-        <ScheduleProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <ScheduleProvider>
             <AppShell>{children}</AppShell>
-          </AuthProvider>
-        </ScheduleProvider>
+          </ScheduleProvider>
+        </AuthProvider>
       </body>
     </html>
   );

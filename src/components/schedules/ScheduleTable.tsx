@@ -6,8 +6,8 @@ import type { Schedule } from '@/types';
 interface ScheduleTableProps {
   schedules: Schedule[];
   onEdit: (schedule: Schedule) => void;
-  onDelete: (id: string) => void;
-  onStatusChange: (id: string, status: Schedule['progressStatus']) => void;
+  onDelete: (id: string) => void | Promise<void>;
+  onStatusChange: (id: string, status: Schedule['progressStatus']) => void | Promise<void>;
 }
 
 export default function ScheduleTable({ schedules, onEdit, onDelete, onStatusChange }: ScheduleTableProps) {
