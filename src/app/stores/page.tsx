@@ -174,7 +174,7 @@ export default function TeamsPage() {
                         </button>
                         {deleteConfirm === store.id ? (
                           <div className="flex gap-1">
-                            <button onClick={async () => { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
+                            <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch { /* API error */ } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
                             <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">취소</button>
                           </div>
                         ) : (

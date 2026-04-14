@@ -50,8 +50,10 @@ export default function SchedulesPage() {
   }, [schedules, selectedDate, statusFilter, searchQuery]);
 
   const handleAdd = async (data: Omit<Schedule, 'id'>) => {
-    await addSchedule(data);
-    setShowForm(false);
+    try {
+      await addSchedule(data);
+      setShowForm(false);
+    } catch { /* API error — store already handles state */ }
   };
 
   const handleEdit = (schedule: Schedule) => {
@@ -61,14 +63,18 @@ export default function SchedulesPage() {
 
   const handleUpdate = async (data: Omit<Schedule, 'id'>) => {
     if (editingSchedule) {
-      await updateSchedule(editingSchedule.id, data);
-      setEditingSchedule(null);
-      setShowForm(false);
+      try {
+        await updateSchedule(editingSchedule.id, data);
+        setEditingSchedule(null);
+        setShowForm(false);
+      } catch { /* API error */ }
     }
   };
 
   const handleStatusChange = async (id: string, status: ProgressStatus) => {
-    await updateSchedule(id, { progressStatus: status });
+    try {
+      await updateSchedule(id, { progressStatus: status });
+    } catch { /* API error */ }
   };
 
   const clearFilters = () => {
@@ -148,7 +154,7 @@ export default function SchedulesPage() {
         <ScheduleTable
           schedules={filteredSchedules}
           onEdit={handleEdit}
-          onDelete={deleteSchedule}
+          onDelete={async (id) => { try { await deleteSchedule(id); } catch { /* API error */ } }}
           onStatusChange={handleStatusChange}
         />
 

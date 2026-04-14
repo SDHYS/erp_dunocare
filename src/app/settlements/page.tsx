@@ -130,19 +130,19 @@ export default function SettlementsPage() {
                   <td className="px-4 py-3 text-center">
                     <SettlementSelect
                       value={s.settlementStatus}
-                      onChange={(v) => updateSchedule(s.id, { settlementStatus: v as Schedule['settlementStatus'] })}
+                      onChange={(v) => { updateSchedule(s.id, { settlementStatus: v as Schedule['settlementStatus'] }).catch(() => {}); }}
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
                     <InvoiceSelect
                       value={s.ownerInvoice}
-                      onChange={(v) => updateSchedule(s.id, { ownerInvoice: v as Schedule['ownerInvoice'] })}
+                      onChange={(v) => { updateSchedule(s.id, { ownerInvoice: v as Schedule['ownerInvoice'] }).catch(() => {}); }}
                     />
                   </td>
                   <td className="px-4 py-3 text-center">
                     <InvoiceSelect
                       value={s.partnerSettlement}
-                      onChange={(v) => updateSchedule(s.id, { partnerSettlement: v as Schedule['partnerSettlement'] })}
+                      onChange={(v) => { updateSchedule(s.id, { partnerSettlement: v as Schedule['partnerSettlement'] }).catch(() => {}); }}
                     />
                   </td>
                 </tr>
@@ -178,21 +178,21 @@ export default function SettlementsPage() {
                   <span className="text-xs text-gray-400 block mb-1">정산</span>
                   <SettlementSelect
                     value={s.settlementStatus}
-                    onChange={(v) => updateSchedule(s.id, { settlementStatus: v as Schedule['settlementStatus'] })}
+                    onChange={(v) => { updateSchedule(s.id, { settlementStatus: v as Schedule['settlementStatus'] }).catch(() => {}); }}
                   />
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block mb-1">점주 계산서</span>
                   <InvoiceSelect
                     value={s.ownerInvoice}
-                    onChange={(v) => updateSchedule(s.id, { ownerInvoice: v as Schedule['ownerInvoice'] })}
+                    onChange={(v) => { updateSchedule(s.id, { ownerInvoice: v as Schedule['ownerInvoice'] }).catch(() => {}); }}
                   />
                 </div>
                 <div>
                   <span className="text-xs text-gray-400 block mb-1">협력자</span>
                   <InvoiceSelect
                     value={s.partnerSettlement}
-                    onChange={(v) => updateSchedule(s.id, { partnerSettlement: v as Schedule['partnerSettlement'] })}
+                    onChange={(v) => { updateSchedule(s.id, { partnerSettlement: v as Schedule['partnerSettlement'] }).catch(() => {}); }}
                   />
                 </div>
               </div>
