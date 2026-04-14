@@ -32,21 +32,28 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
-    if (!user) return;
-    const [schedRes, teamsRes, reqRes] = await Promise.all([
-      apiFetch('/api/schedules'),
-      apiFetch('/api/teams'),
-      apiFetch('/api/request-types'),
-    ]);
-    if (schedRes.ok) setSchedules(await schedRes.json());
-    if (teamsRes.ok) setStores(await teamsRes.json());
-    if (reqRes.ok) setRequestTypes(await reqRes.json());
-  }, [user]);
+    try {
+      const [schedRes, teamsRes, reqRes] = await Promise.all([
+        apiFetch('/api/schedules'),
+        apiFetch('/api/teams'),
+        apiFetch('/api/request-types'),
+      ]);
+      if (schedRes.ok) setSchedules(await schedRes.json());
+      if (teamsRes.ok) setStores(await teamsRes.json());
+      if (reqRes.ok) setRequestTypes(await reqRes.json());
+    } catch {
+      // Network error — data stays empty, user can retry via page refresh
+    }
+  }, []);
 
+  // Fetch when user logs in (identity change)
+  const userId = user ? `${user.role}:${user.name}` : null;
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- API 데이터 로드는 useEffect 필수
-    fetchAll();
-  }, [fetchAll]);
+    if (userId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- API 데이터 초기 로드는 useEffect 필수
+      fetchAll();
+    }
+  }, [userId, fetchAll]);
 
   const addSchedule = useCallback(async (schedule: Omit<Schedule, 'id'>) => {
     const res = await apiFetch('/api/schedules', {
@@ -56,6 +63,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     if (res.ok) {
       const created = await res.json();
       setSchedules(prev => [...prev, created]);
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '일정 생성에 실패했습니다.');
     }
   }, []);
 
@@ -67,6 +77,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     if (res.ok) {
       const updated = await res.json();
       setSchedules(prev => prev.map(s => s.id === id ? updated : s));
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '일정 수정에 실패했습니다.');
     }
   }, []);
 
@@ -74,6 +87,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     const res = await apiFetch(`/api/schedules/${id}`, { method: 'DELETE' });
     if (res.ok) {
       setSchedules(prev => prev.filter(s => s.id !== id));
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '일정 삭제에 실패했습니다.');
     }
   }, []);
 
@@ -85,6 +101,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     if (res.ok) {
       const created = await res.json();
       setStores(prev => [...prev, created]);
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '팀 생성에 실패했습니다.');
     }
   }, []);
 
@@ -96,6 +115,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     if (res.ok) {
       const updated = await res.json();
       setStores(prev => prev.map(s => s.id === id ? updated : s));
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '팀 수정에 실패했습니다.');
     }
   }, []);
 
@@ -103,6 +125,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     const res = await apiFetch(`/api/teams/${id}`, { method: 'DELETE' });
     if (res.ok) {
       setStores(prev => prev.filter(s => s.id !== id));
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '팀 삭제에 실패했습니다.');
     }
   }, []);
 
@@ -112,7 +137,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
       body: JSON.stringify({ name: type }),
     });
     if (res.ok) {
-      setRequestTypes(prev => prev.includes(type) ? prev : [...prev, type]);
+      // Re-fetch to get server-canonical list
+      const listRes = await apiFetch('/api/request-types');
+      if (listRes.ok) setRequestTypes(await listRes.json());
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '요청사항 추가에 실패했습니다.');
     }
   }, []);
 
@@ -122,6 +152,9 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     });
     if (res.ok) {
       setRequestTypes(prev => prev.filter(t => t !== type));
+    } else {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || '요청사항 삭제에 실패했습니다.');
     }
   }, []);
 

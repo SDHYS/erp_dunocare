@@ -37,7 +37,7 @@ export async function PUT(
       .from('teams')
       .update(updates)
       .eq('id', id)
-      .select('id, name, address, contact, business_number, email, memo, login_id')
+      .select('id, name, address, contact, business_number, email, memo, login_id, password_hash')
       .single();
 
     if (error) {
@@ -58,7 +58,7 @@ export async function PUT(
       email: data.email || '',
       memo: data.memo || '',
       loginId: data.login_id || '',
-      hasPassword: !!body.password,
+      hasPassword: !!data.password_hash,
     });
   } catch {
     return Response.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 });

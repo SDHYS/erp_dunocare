@@ -17,7 +17,7 @@ export async function apiFetch(path: string, options: RequestInit = {}) {
     // Session expired — clear and redirect to login
     sessionStorage.removeItem('session_token');
     window.location.reload();
-    throw new Error('세션이 만료되었습니다.');
+    return res; // return instead of throw to avoid unhandled rejection before reload
   }
   return res;
 }

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 
 // Dummy hash for timing-attack mitigation (always run bcrypt even if user not found)
-const DUMMY_HASH = '$2b$10$dummyhashvaluepadding.paddingtomake60chars00000000';
+const DUMMY_HASH = bcrypt.hashSync('dummy-password-never-matches', 10);
 
 const GENERIC_ERROR = '아이디 또는 비밀번호가 올바르지 않습니다.';
 
@@ -73,6 +73,9 @@ export async function POST(request: Request) {
       }
       const token = crypto.randomBytes(32).toString('hex');
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+      // Cleanup expired sessions
+      await supabase.from('app_sessions').delete().lt('expires_at', new Date().toISOString());
 
       const { error: insertError } = await supabase.from('app_sessions').insert({
         user_role: 'team',

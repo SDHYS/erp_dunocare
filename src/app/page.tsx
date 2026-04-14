@@ -93,6 +93,7 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {schedules
               .filter(s => s.progressStatus === '진행완료')
+              .sort((a, b) => b.date.localeCompare(a.date))
               .slice(0, 5)
               .map(s => (
                 <div key={s.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">

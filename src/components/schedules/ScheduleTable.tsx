@@ -99,7 +99,7 @@ export default function ScheduleTable({ schedules, onEdit, onDelete, onStatusCha
                     {deleteConfirm === s.id ? (
                       <div className="flex gap-1">
                         <button
-                          onClick={() => { onDelete(s.id); setDeleteConfirm(null); }}
+                          onClick={async () => { await onDelete(s.id); setDeleteConfirm(null); }}
                           className="px-2 py-1 bg-red-500 text-white text-xs rounded"
                         >
                           확인
@@ -165,7 +165,7 @@ export default function ScheduleTable({ schedules, onEdit, onDelete, onStatusCha
               {deleteConfirm === s.id ? (
                 <div className="flex gap-1 flex-1">
                   <button
-                    onClick={() => { onDelete(s.id); setDeleteConfirm(null); }}
+                    onClick={async () => { await onDelete(s.id); setDeleteConfirm(null); }}
                     className="flex-1 py-2 text-sm bg-red-500 text-white rounded-lg"
                   >
                     삭제 확인

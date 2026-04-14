@@ -42,7 +42,7 @@ export default function TeamsPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
-    const data: Record<string, string> = {
+    const storeData = {
       name: fd.get('name') as string,
       address: fd.get('address') as string,
       contact: fd.get('contact') as string,
@@ -50,17 +50,20 @@ export default function TeamsPage() {
       email: fd.get('email') as string,
       memo: fd.get('memo') as string,
       loginId: fd.get('loginId') as string,
+      password: (fd.get('password') as string) || undefined,
     };
-    const pw = fd.get('password') as string;
-    if (pw) data.password = pw;
 
-    if (editing) {
-      await updateStore(editing.id, data);
-      setEditing(null);
-    } else {
-      await addStore(data as never);
+    try {
+      if (editing) {
+        await updateStore(editing.id, storeData);
+        setEditing(null);
+      } else {
+        await addStore(storeData);
+      }
+      setShowForm(false);
+    } catch {
+      // Error thrown from store — user can retry
     }
-    setShowForm(false);
   };
 
   const accountCount = stores.filter(s => s.loginId && s.hasPassword).length;

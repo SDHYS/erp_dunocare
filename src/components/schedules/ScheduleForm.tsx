@@ -121,7 +121,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
     }
 
     if (!form.storeName) return;
-    onSubmit({ ...form, assignee: finalAssignee });
+    await onSubmit({ ...form, assignee: finalAssignee });
   };
 
   const handleAddRequestType = () => {

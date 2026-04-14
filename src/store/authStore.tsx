@@ -43,16 +43,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (loginId: string, password: string): Promise<string | null> => {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ loginId, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) return data.error || '로그인에 실패했습니다.';
-    sessionStorage.setItem('session_token', data.token);
-    setUser(data.user);
-    return null;
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginId, password }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) return data?.error || '로그인에 실패했습니다.';
+      sessionStorage.setItem('session_token', data.token);
+      setUser(data.user);
+      return null;
+    } catch {
+      return '서버에 연결할 수 없습니다. 네트워크를 확인하세요.';
+    }
   }, []);
 
   const logout = useCallback(async () => {

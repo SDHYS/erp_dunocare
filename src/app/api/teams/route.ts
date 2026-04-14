@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     if (user.role === 'team' && user.teamId) {
       const { data, error } = await supabase
         .from('teams')
-        .select('id, name, address, contact, business_number, email, memo, login_id')
+        .select('id, name, address, contact, business_number, email, memo, login_id, password_hash')
         .eq('id', user.teamId)
         .single();
 
@@ -27,14 +27,14 @@ export async function GET(request: Request) {
         email: data.email || '',
         memo: data.memo || '',
         loginId: data.login_id || '',
-        hasPassword: false,
+        hasPassword: !!data.password_hash,
       }]);
     }
 
     // Admin: see all teams
     const { data, error } = await supabase
       .from('teams')
-      .select('id, name, address, contact, business_number, email, memo, login_id')
+      .select('id, name, address, contact, business_number, email, memo, login_id, password_hash')
       .order('created_at', { ascending: true });
 
     if (error) return Response.json({ error: '데이터 조회 중 오류가 발생했습니다.' }, { status: 500 });
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
       email: row.email || '',
       memo: row.memo || '',
       loginId: row.login_id || '',
-      hasPassword: false,
+      hasPassword: !!row.password_hash,
     }));
 
     return Response.json(teams);
