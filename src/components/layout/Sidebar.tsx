@@ -39,7 +39,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       >
         <div className="flex items-center gap-2 h-16 px-6 border-b border-gray-200">
           <Image src="/logo.png" alt="시그널디코드" width={32} height={32} className="rounded-lg object-cover" />
-          <span className="text-lg font-bold text-gray-900">ERP</span>
+          <span className="text-lg font-bold text-gray-900">DUNOCARE ERP</span>
           <button
             onClick={onClose}
             className="ml-auto lg:hidden p-1 rounded hover:bg-gray-100"

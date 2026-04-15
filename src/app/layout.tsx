@@ -5,8 +5,8 @@ import { AuthProvider } from "@/store/authStore";
 import AppShell from "@/components/layout/AppShell";
 
 export const metadata: Metadata = {
-  title: "일정관리 어드민",
-  description: "정비/청소 일정 관리 시스템",
+  title: "DUNOCARE ERP",
+  description: "DUNOCARE ERP - 정비/청소 일정 관리 시스템",
 };
 
 export const viewport: Viewport = {

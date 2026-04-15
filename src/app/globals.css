@@ -63,27 +63,29 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   animation: slideIn 0.3s ease-out;
 }
 
-.input {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  color: #111827;
-  background: white;
-  transition: border-color 0.15s, box-shadow 0.15s;
-  outline: none;
-}
+@layer components {
+  .input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #111827;
+    background: white;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
 
-.input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-}
+  .input:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
 
-.input::placeholder {
-  color: #9ca3af;
-}
+  .input::placeholder {
+    color: #9ca3af;
+  }
 
-textarea.input {
-  resize: vertical;
+  textarea.input {
+    resize: vertical;
+  }
 }
