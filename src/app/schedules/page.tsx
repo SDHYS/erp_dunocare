@@ -160,7 +160,7 @@ export default function SchedulesPage() {
         <ScheduleTable
           schedules={filteredSchedules}
           onEdit={handleEdit}
-          onDelete={async (id) => { try { await deleteSchedule(id); } catch { /* API error */ } }}
+          onDelete={async (id) => { try { await deleteSchedule(id); } catch (err) { alert(err instanceof Error ? err.message : '삭제에 실패했습니다.'); } }}
           onStatusChange={handleStatusChange}
         />
 

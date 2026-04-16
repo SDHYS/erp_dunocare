@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       .eq('login_id', loginId)
       .single();
 
-    if (admin) {
+    if (admin && admin.password_hash) {
       const valid = await bcrypt.compare(password, admin.password_hash);
       if (!valid) {
         return Response.json({ error: GENERIC_ERROR }, { status: 401 });

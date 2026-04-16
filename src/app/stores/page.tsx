@@ -11,6 +11,7 @@ export default function TeamsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filtered = stores.filter(s =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -41,6 +42,9 @@ export default function TeamsPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     const fd = new FormData(e.currentTarget);
     const storeData = {
       name: fd.get('name') as string,
@@ -61,8 +65,10 @@ export default function TeamsPage() {
         await addStore(storeData);
       }
       setShowForm(false);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : '팀 저장에 실패했습니다.');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '팀 저장에 실패했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -174,7 +180,7 @@ export default function TeamsPage() {
                         </button>
                         {deleteConfirm === store.id ? (
                           <div className="flex gap-1">
-                            <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch { /* API error */ } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
+                            <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch (err) { alert(err instanceof Error ? err.message : '삭제에 실패했습니다.'); } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
                             <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">취소</button>
                           </div>
                         ) : (
@@ -234,7 +240,7 @@ export default function TeamsPage() {
                     </button>
                     {deleteConfirm === store.id ? (
                       <div className="flex gap-1">
-                        <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch { /* API error */ } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
+                        <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch (err) { alert(err instanceof Error ? err.message : '삭제에 실패했습니다.'); } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
                         <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">취소</button>
                       </div>
                     ) : (
@@ -379,9 +385,9 @@ export default function TeamsPage() {
                   className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">
                   취소
                 </button>
-                <button type="submit"
-                  className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover">
-                  {editing ? '수정하기' : '등록하기'}
+                <button type="submit" disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed">
+                  {isSubmitting ? '처리중...' : editing ? '수정하기' : '등록하기'}
                 </button>
               </div>
             </form>

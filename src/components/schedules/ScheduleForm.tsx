@@ -68,6 +68,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
   const [newRequestType, setNewRequestType] = useState('');
   const [showRequestPopup, setShowRequestPopup] = useState(false);
   const [teamConfirmed, setTeamConfirmed] = useState(() => !!schedule?.fieldManager);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (field: keyof Omit<Schedule, 'id'>, value: string | number) => {
     setForm(prev => ({ ...prev, [field]: value }));
@@ -100,6 +101,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
 
     let finalAssignee = form.assignee;
 
@@ -108,6 +110,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
       finalAssignee = newTeamName.trim();
       const exists = stores.some(s => s.name === finalAssignee);
       if (!exists) {
+        setIsSubmitting(true);
         try {
           await addStore({
             name: finalAssignee,
@@ -120,16 +123,20 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
           });
         } catch {
           alert('팀 등록에 실패했습니다. 다시 시도해주세요.');
+          setIsSubmitting(false);
           return;
         }
       }
     }
 
-    if (!form.storeName) return;
+    if (!form.storeName) { setIsSubmitting(false); return; }
+    setIsSubmitting(true);
     try {
       await onSubmit({ ...form, assignee: finalAssignee });
     } catch {
       alert('일정 저장에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -450,7 +457,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                   step="0.1"
                   min="0"
                   max="100"
-                  value={parseFloat(form.deductionRate) || ''}
+                  value={isNaN(parseFloat(form.deductionRate)) ? '' : parseFloat(form.deductionRate)}
                   onChange={e => handleChange('deductionRate', e.target.value ? `${e.target.value}%` : '')}
                   className="input pr-8 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   placeholder="0"
@@ -567,9 +574,10 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {schedule ? '수정하기' : '등록하기'}
+              {isSubmitting ? '처리중...' : schedule ? '수정하기' : '등록하기'}
             </button>
           </div>
         </form>

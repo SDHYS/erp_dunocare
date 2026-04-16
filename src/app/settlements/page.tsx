@@ -34,9 +34,11 @@ export default function SettlementsPage() {
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = { '정산대기': 0, '정산중': 0, '정산완료': 0 };
-    schedules.forEach(s => { counts[s.settlementStatus]++; });
+    filtered.forEach(s => {
+      if (counts[s.settlementStatus] !== undefined) counts[s.settlementStatus]++;
+    });
     return counts;
-  }, [schedules]);
+  }, [filtered]);
 
   return (
     <div className="space-y-4 max-w-6xl mx-auto">

@@ -15,9 +15,14 @@ export async function PUT(
     const body = await request.json().catch(() => null);
     if (!body) return Response.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
-    // 입력값 길이 제한
-    if (typeof body.name === 'string' && body.name.length > 100) {
-      return Response.json({ error: '팀명이 너무 깁니다.' }, { status: 400 });
+    // 팀명 필수값 및 길이 제한
+    if (body.name !== undefined) {
+      if (typeof body.name !== 'string' || body.name.trim().length === 0) {
+        return Response.json({ error: '팀명은 필수입니다.' }, { status: 400 });
+      }
+      if (body.name.length > 100) {
+        return Response.json({ error: '팀명이 너무 깁니다.' }, { status: 400 });
+      }
     }
     for (const key of ['address', 'contact', 'businessNumber', 'email', 'memo', 'loginId']) {
       if (typeof body[key] === 'string' && body[key].length > 200) {
