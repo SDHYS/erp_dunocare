@@ -57,6 +57,9 @@ export async function PUT(
       if (error.code === '23505') {
         return Response.json({ error: '이미 사용중인 로그인 아이디입니다.' }, { status: 409 });
       }
+      if (error.code === 'PGRST116') {
+        return Response.json({ error: '팀을 찾을 수 없습니다.' }, { status: 404 });
+      }
       return Response.json({ error: '팀 수정 중 오류가 발생했습니다.' }, { status: 500 });
     }
 

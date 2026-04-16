@@ -133,11 +133,15 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
     }
   };
 
-  const handleAddRequestType = () => {
+  const handleAddRequestType = async () => {
     const trimmed = newRequestType.trim();
     if (trimmed && !requestTypes.includes(trimmed)) {
-      addRequestType(trimmed);
-      setNewRequestType('');
+      try {
+        await addRequestType(trimmed);
+        setNewRequestType('');
+      } catch {
+        alert('요청사항 추가에 실패했습니다.');
+      }
     }
   };
 
@@ -280,7 +284,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                           <span className="text-sm text-gray-700">{r}</span>
                           <button
                             type="button"
-                            onClick={() => removeRequestType(r)}
+                            onClick={() => removeRequestType(r).catch(() => alert('요청사항 삭제에 실패했습니다.'))}
                             className="p-1 hover:bg-red-50 rounded transition-colors"
                           >
                             <svg className="w-4 h-4 text-gray-400 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -312,6 +316,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 <span className="text-sm font-medium text-gray-700">
                   비용 <span className="text-red-500">*</span>
                 </span>
+                {!schedule && (
                 <div className="flex items-center gap-1 bg-gray-100 rounded-full p-0.5">
                   <button
                     type="button"
@@ -332,6 +337,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                     부가세 포함
                   </button>
                 </div>
+                )}
               </div>
               <div className="relative">
                 <input

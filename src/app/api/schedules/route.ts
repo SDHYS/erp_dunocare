@@ -54,6 +54,12 @@ export async function POST(request: Request) {
       return Response.json({ error: '비고사항이 너무 깁니다.' }, { status: 400 });
     }
 
+    const cost = Number(body.cost) || 0;
+    const settlementAmount = Number(body.settlementAmount) || 0;
+    if (!isFinite(cost) || !isFinite(settlementAmount)) {
+      return Response.json({ error: '금액은 유효한 숫자여야 합니다.' }, { status: 400 });
+    }
+
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
       .from('schedules')
@@ -62,12 +68,12 @@ export async function POST(request: Request) {
         store_name: body.storeName,
         request: body.request,
         maintenance_time: body.maintenanceTime || '',
-        cost: Number(body.cost) || 0,
+        cost,
         progress_status: body.progressStatus || '접수',
         assignee: body.assignee || '',
         satisfaction: body.satisfaction || '미응답',
         payment: body.payment || '미결제',
-        settlement_amount: Number(body.settlementAmount) || 0,
+        settlement_amount: settlementAmount,
         deduction_rate: body.deductionRate || '10%',
         settlement_status: body.settlementStatus || '정산대기',
         owner_invoice: body.ownerInvoice || '미발행',

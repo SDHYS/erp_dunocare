@@ -61,8 +61,8 @@ export default function TeamsPage() {
         await addStore(storeData);
       }
       setShowForm(false);
-    } catch {
-      // Error thrown from store — user can retry
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '팀 저장에 실패했습니다.');
     }
   };
 

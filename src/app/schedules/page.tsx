@@ -53,7 +53,9 @@ export default function SchedulesPage() {
     try {
       await addSchedule(data);
       setShowForm(false);
-    } catch { /* API error — store already handles state */ }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '일정 생성에 실패했습니다.');
+    }
   };
 
   const handleEdit = (schedule: Schedule) => {
@@ -67,14 +69,18 @@ export default function SchedulesPage() {
         await updateSchedule(editingSchedule.id, data);
         setEditingSchedule(null);
         setShowForm(false);
-      } catch { /* API error */ }
+      } catch (e) {
+        alert(e instanceof Error ? e.message : '일정 수정에 실패했습니다.');
+      }
     }
   };
 
   const handleStatusChange = async (id: string, status: ProgressStatus) => {
     try {
       await updateSchedule(id, { progressStatus: status });
-    } catch { /* API error */ }
+    } catch (e) {
+      alert(e instanceof Error ? e.message : '상태 변경에 실패했습니다.');
+    }
   };
 
   const clearFilters = () => {

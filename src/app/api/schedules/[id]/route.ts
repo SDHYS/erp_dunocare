@@ -77,12 +77,20 @@ export async function PUT(
     }
 
     // Build update object
+    const NUMERIC_FIELDS = new Set(['cost', 'settlementAmount']);
     const updates: Record<string, unknown> = {};
     for (const [camelKey, snakeKey] of Object.entries(FIELD_MAP)) {
       if (body[camelKey] !== undefined) {
         // Team: only allowed fields
         if (user.role === 'team' && !TEAM_ALLOWED_FIELDS.has(camelKey)) continue;
-        updates[snakeKey] = body[camelKey];
+        let value = body[camelKey];
+        if (NUMERIC_FIELDS.has(camelKey)) {
+          value = Number(value) || 0;
+          if (!isFinite(value)) {
+            return Response.json({ error: '금액은 유효한 숫자여야 합니다.' }, { status: 400 });
+          }
+        }
+        updates[snakeKey] = value;
       }
     }
 
@@ -97,7 +105,12 @@ export async function PUT(
       .select()
       .single();
 
-    if (error) return Response.json({ error: '일정 수정 중 오류가 발생했습니다.' }, { status: 500 });
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return Response.json({ error: '일정을 찾을 수 없습니다.' }, { status: 404 });
+      }
+      return Response.json({ error: '일정 수정 중 오류가 발생했습니다.' }, { status: 500 });
+    }
     if (!data) return Response.json({ error: '일정을 찾을 수 없습니다.' }, { status: 404 });
 
     return Response.json({
