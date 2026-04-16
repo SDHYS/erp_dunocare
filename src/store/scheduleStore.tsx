@@ -138,8 +138,12 @@ export function ScheduleProvider({ children }: { children: React.ReactNode }) {
     });
     if (res.ok) {
       // Re-fetch to get server-canonical list
-      const listRes = await apiFetch('/api/request-types');
-      if (listRes.ok) setRequestTypes(await listRes.json());
+      try {
+        const listRes = await apiFetch('/api/request-types');
+        if (listRes.ok) setRequestTypes(await listRes.json());
+      } catch {
+        // 목록 재조회 실패는 무시 — 다음 로드 시 반영됨
+      }
     } else {
       const err = await res.json().catch(() => null);
       throw new Error(err?.error || '요청사항 추가에 실패했습니다.');

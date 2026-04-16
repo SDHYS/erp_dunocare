@@ -108,20 +108,29 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
       finalAssignee = newTeamName.trim();
       const exists = stores.some(s => s.name === finalAssignee);
       if (!exists) {
-        await addStore({
-          name: finalAssignee,
-          contact: newTeamContact.trim(),
-          address: '',
-          businessNumber: '',
-          email: '',
-          memo: '',
-          loginId: '',
-        });
+        try {
+          await addStore({
+            name: finalAssignee,
+            contact: newTeamContact.trim(),
+            address: '',
+            businessNumber: '',
+            email: '',
+            memo: '',
+            loginId: '',
+          });
+        } catch {
+          alert('팀 등록에 실패했습니다. 다시 시도해주세요.');
+          return;
+        }
       }
     }
 
     if (!form.storeName) return;
-    await onSubmit({ ...form, assignee: finalAssignee });
+    try {
+      await onSubmit({ ...form, assignee: finalAssignee });
+    } catch {
+      alert('일정 저장에 실패했습니다. 다시 시도해주세요.');
+    }
   };
 
   const handleAddRequestType = () => {

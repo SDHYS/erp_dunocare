@@ -227,11 +227,23 @@ export default function TeamsPage() {
                       {stats.active > 0 && <p className="text-xs text-orange-500 font-medium">진행 {stats.active}</p>}
                       {stats.completed > 0 && <p className="text-xs text-green-500 font-medium">완료 {stats.completed}</p>}
                     </div>
-                    <button onClick={() => { setEditing(store); setShowForm(true); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                    <button onClick={() => { setEditing(store); setShowForm(true); }} className="p-1.5 hover:bg-gray-100 rounded-lg" aria-label="수정">
                       <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
+                    {deleteConfirm === store.id ? (
+                      <div className="flex gap-1">
+                        <button onClick={async () => { try { await deleteStore(store.id); setDeleteConfirm(null); if (selectedTeam === store.id) setSelectedTeam(null); } catch { /* API error */ } }} className="px-2 py-1 bg-red-500 text-white text-xs rounded">확인</button>
+                        <button onClick={() => setDeleteConfirm(null)} className="px-2 py-1 bg-gray-200 text-gray-600 text-xs rounded">취소</button>
+                      </div>
+                    ) : (
+                      <button onClick={() => setDeleteConfirm(store.id)} className="p-1.5 hover:bg-red-50 rounded-lg" aria-label="삭제">
+                        <svg className="w-4 h-4 text-gray-400 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

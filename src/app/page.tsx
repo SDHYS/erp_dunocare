@@ -12,7 +12,8 @@ export default function DashboardPage() {
   const received = schedules.filter(s => s.progressStatus === '접수').length;
   const completed = schedules.filter(s => s.progressStatus === '진행완료').length;
   const unsettled = schedules.filter(s => s.settlementStatus !== '정산완료').length;
-  const totalRevenue = schedules.reduce((sum, s) => sum + s.cost, 0);
+  const currentMonth = today.slice(0, 7); // YYYY-MM
+  const totalRevenue = schedules.filter(s => s.date.startsWith(currentMonth)).reduce((sum, s) => sum + s.cost, 0);
   const unsatisfied = schedules.filter(s => s.satisfaction === '불만').length;
 
   const statusCounts: Record<string, number> = {};

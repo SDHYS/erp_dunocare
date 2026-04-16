@@ -45,6 +45,16 @@ export async function PUT(
     const body = await request.json().catch(() => null);
     if (!body) return Response.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
+    // 문자열 필드 길이 제한
+    for (const key of ['storeName', 'request', 'assignee', 'fieldManager', 'maintenanceTime', 'deductionRate']) {
+      if (typeof body[key] === 'string' && body[key].length > 200) {
+        return Response.json({ error: '입력값이 너무 깁니다.' }, { status: 400 });
+      }
+    }
+    if (typeof body.notes === 'string' && body.notes.length > 2000) {
+      return Response.json({ error: '비고사항이 너무 깁니다.' }, { status: 400 });
+    }
+
     const supabase = getSupabaseAdmin();
 
     // Team users: verify they own this schedule

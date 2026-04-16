@@ -68,6 +68,17 @@ export async function POST(request: Request) {
     if (!body.name || typeof body.name !== 'string') {
       return Response.json({ error: '팀명은 필수입니다.' }, { status: 400 });
     }
+    if (body.name.length > 100) {
+      return Response.json({ error: '팀명이 너무 깁니다.' }, { status: 400 });
+    }
+    for (const key of ['address', 'contact', 'businessNumber', 'email', 'memo', 'loginId']) {
+      if (typeof body[key] === 'string' && body[key].length > 200) {
+        return Response.json({ error: '입력값이 너무 깁니다.' }, { status: 400 });
+      }
+    }
+    if (typeof body.password === 'string' && body.password.length > 128) {
+      return Response.json({ error: '비밀번호가 너무 깁니다.' }, { status: 400 });
+    }
 
     const supabase = getSupabaseAdmin();
 

@@ -15,6 +15,19 @@ export async function PUT(
     const body = await request.json().catch(() => null);
     if (!body) return Response.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
+    // 입력값 길이 제한
+    if (typeof body.name === 'string' && body.name.length > 100) {
+      return Response.json({ error: '팀명이 너무 깁니다.' }, { status: 400 });
+    }
+    for (const key of ['address', 'contact', 'businessNumber', 'email', 'memo', 'loginId']) {
+      if (typeof body[key] === 'string' && body[key].length > 200) {
+        return Response.json({ error: '입력값이 너무 깁니다.' }, { status: 400 });
+      }
+    }
+    if (typeof body.password === 'string' && body.password.length > 128) {
+      return Response.json({ error: '비밀번호가 너무 깁니다.' }, { status: 400 });
+    }
+
     const supabase = getSupabaseAdmin();
 
     const updates: Record<string, unknown> = {};

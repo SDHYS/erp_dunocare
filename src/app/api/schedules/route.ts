@@ -40,9 +40,18 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     if (!body) return Response.json({ error: '잘못된 요청입니다.' }, { status: 400 });
 
-    // Required field validation
+    // Input type & length validation
+    if (typeof body.date !== 'string' || typeof body.storeName !== 'string' || typeof body.request !== 'string') {
+      return Response.json({ error: '날짜, 매장명, 요청사항은 필수입니다.' }, { status: 400 });
+    }
     if (!body.date || !body.storeName || !body.request) {
       return Response.json({ error: '날짜, 매장명, 요청사항은 필수입니다.' }, { status: 400 });
+    }
+    if (body.storeName.length > 200 || body.request.length > 200) {
+      return Response.json({ error: '입력값이 너무 깁니다.' }, { status: 400 });
+    }
+    if (typeof body.notes === 'string' && body.notes.length > 2000) {
+      return Response.json({ error: '비고사항이 너무 깁니다.' }, { status: 400 });
     }
 
     const supabase = getSupabaseAdmin();
@@ -77,25 +86,25 @@ export async function POST(request: Request) {
   }
 }
 
-// snake_case DB → camelCase TS mapping
+// snake_case DB → camelCase TS mapping (null 값을 기본값으로 변환)
 function mapRowToSchedule(row: Record<string, unknown>) {
   return {
-    id: row.id,
-    date: row.date,
-    storeName: row.store_name,
-    request: row.request,
-    maintenanceTime: row.maintenance_time,
-    cost: row.cost,
-    progressStatus: row.progress_status,
-    assignee: row.assignee,
-    satisfaction: row.satisfaction,
-    payment: row.payment,
-    settlementAmount: row.settlement_amount,
-    deductionRate: row.deduction_rate,
-    settlementStatus: row.settlement_status,
-    ownerInvoice: row.owner_invoice,
-    partnerSettlement: row.partner_settlement,
-    fieldManager: row.field_manager,
-    notes: row.notes,
+    id: row.id as string,
+    date: (row.date as string) || '',
+    storeName: (row.store_name as string) || '',
+    request: (row.request as string) || '',
+    maintenanceTime: (row.maintenance_time as string) || '',
+    cost: Number(row.cost) || 0,
+    progressStatus: (row.progress_status as string) || '접수',
+    assignee: (row.assignee as string) || '',
+    satisfaction: (row.satisfaction as string) || '미응답',
+    payment: (row.payment as string) || '미결제',
+    settlementAmount: Number(row.settlement_amount) || 0,
+    deductionRate: (row.deduction_rate as string) || '10%',
+    settlementStatus: (row.settlement_status as string) || '정산대기',
+    ownerInvoice: (row.owner_invoice as string) || '미발행',
+    partnerSettlement: (row.partner_settlement as string) || '미발행',
+    fieldManager: (row.field_manager as string) || '',
+    notes: (row.notes as string) || '',
   };
 }

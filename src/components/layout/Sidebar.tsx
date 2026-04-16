@@ -43,6 +43,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <button
             onClick={onClose}
             className="ml-auto lg:hidden p-1 rounded hover:bg-gray-100"
+            aria-label="사이드바 닫기"
           >
             <CloseIcon />
           </button>
