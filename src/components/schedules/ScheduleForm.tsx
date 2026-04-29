@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Schedule } from '@/types';
-// Teams are managed in team management (stores), no longer using hardcoded TEAMS
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useAuth } from '@/store/authStore';
+import { calculateSettlement } from '@/lib/settlement';
+import { useToast } from '@/components/ui/Toast';
 
 interface ScheduleFormProps {
   schedule?: Schedule | null;
@@ -21,8 +22,12 @@ const EMPTY_FORM: Omit<Schedule, 'id'> = {
   request: '',
   maintenanceTime: '',
   cost: 0,
+  personalPartsCost: 0,
+  prepaidAmount: 0,
+  paidAt: '',
   progressStatus: '접수',
   assignee: '',
+  workResult: '',
   satisfaction: '미응답',
   payment: '미결제',
   settlementAmount: 0,
@@ -44,14 +49,17 @@ function parseCost(value: string): number {
 }
 
 export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleFormProps) {
-  const { stores, addStore, requestTypes, addRequestType, removeRequestType } = useScheduleStore();
+  const { teams, addTeam, requestTypes, addRequestType, removeRequestType } = useScheduleStore();
   const { user, isAdmin } = useAuth();
+  const { toast } = useToast();
 
   const [form, setForm] = useState<Omit<Schedule, 'id'>>(() => {
     if (schedule) { const { id: _unused, ...rest } = schedule; void _unused; return rest; }
     return EMPTY_FORM;
   });
   const [costDisplay, setCostDisplay] = useState(() => schedule ? formatCost(schedule.cost) : '');
+  const [partsDisplay, setPartsDisplay] = useState(() => schedule?.personalPartsCost ? formatCost(schedule.personalPartsCost) : '');
+  const [prepaidDisplay, setPrepaidDisplay] = useState(() => schedule?.prepaidAmount ? formatCost(schedule.prepaidAmount) : '');
   const [vatIncluded, setVatIncluded] = useState(false);
   const [baseCost, setBaseCost] = useState(() => schedule ? schedule.cost : 0);
   const [timeHour, setTimeHour] = useState<string>(() => {
@@ -88,6 +96,24 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
     setForm(prev => ({ ...prev, cost: finalCost }));
   };
 
+  const handlePartsChange = (value: string) => {
+    const num = parseCost(value);
+    setForm(prev => ({ ...prev, personalPartsCost: num }));
+    setPartsDisplay(num ? num.toLocaleString('ko-KR') : '');
+  };
+
+  const handlePrepaidChange = (value: string) => {
+    const num = parseCost(value);
+    setForm(prev => ({ ...prev, prepaidAmount: num }));
+    setPrepaidDisplay(num ? num.toLocaleString('ko-KR') : '');
+  };
+
+  // 선택한 담당팀의 정산 규칙 기반으로 자동 계산
+  const settlementPreview = useMemo(() => {
+    const selectedTeam = teams.find(t => t.name === form.assignee) || null;
+    return calculateSettlement(form.cost, form.personalPartsCost, selectedTeam);
+  }, [form.cost, form.personalPartsCost, form.assignee, teams]);
+
   const handleTimeChange = (h: string, m: string) => {
     setTimeHour(h);
     setTimeMinute(m);
@@ -99,42 +125,60 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
     }
   };
 
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitAttempted(true);
     if (isSubmitting) return;
+    // HTML5 validity 체크 — 실패 시 인라인 빨간 테두리 활성화
+    const formEl = e.currentTarget as HTMLFormElement;
+    if (!formEl.checkValidity()) {
+      formEl.reportValidity();
+      return;
+    }
+
+    // 필수 필드 가드 — 팀 생성 호출 전에 미리 체크 (orphan team 생성 방지)
+    if (!form.storeName) { setIsSubmitting(false); return; }
 
     let finalAssignee = form.assignee;
 
     // Handle new team creation
     if (teamMode === 'new' && newTeamName.trim()) {
       finalAssignee = newTeamName.trim();
-      const exists = stores.some(s => s.name === finalAssignee);
+      const exists = teams.some(t => t.name === finalAssignee);
       if (!exists) {
         setIsSubmitting(true);
         try {
-          await addStore({
+          await addTeam({
             name: finalAssignee,
+            businessType: 'freelancer',
+            ownerName: '',
             contact: newTeamContact.trim(),
             address: '',
             businessNumber: '',
             email: '',
+            account: '',
             memo: '',
             loginId: '',
+            settlementType: 'simple',
+            vatRate: 10,
+            agencyFeeRate: 0,
+            dunoFeeRate: 20,
+            taxRate: 3.3,
           });
         } catch {
-          alert('팀 등록에 실패했습니다. 다시 시도해주세요.');
+          toast('팀 등록에 실패했습니다. 다시 시도해주세요.', 'error');
           setIsSubmitting(false);
           return;
         }
       }
     }
 
-    if (!form.storeName) { setIsSubmitting(false); return; }
     setIsSubmitting(true);
     try {
       await onSubmit({ ...form, assignee: finalAssignee });
     } catch {
-      alert('일정 저장에 실패했습니다. 다시 시도해주세요.');
+      toast('일정 저장에 실패했습니다. 다시 시도해주세요.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -147,26 +191,35 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
         await addRequestType(trimmed);
         setNewRequestType('');
       } catch {
-        alert('요청사항 추가에 실패했습니다.');
+        toast('요청사항 추가에 실패했습니다.', 'error');
       }
     }
   };
 
+  // Esc 로 닫기
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onCancel]);
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-4 lg:pt-10 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fadeIn">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-4 lg:pt-10 pb-4 px-4 overscroll-contain" onClick={onCancel}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto animate-fadeIn overscroll-contain">
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 rounded-t-2xl flex items-center justify-between z-10">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900">
             {schedule ? '일정 수정' : '새 일정 등록'}
           </h2>
-          <button onClick={onCancel} className="p-1 hover:bg-gray-100 rounded-lg">
+          <button type="button" onClick={onCancel} aria-label="닫기" className="p-2 hover:bg-gray-100 rounded-lg">
             <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit} className={`p-6 space-y-5 ${submitAttempted ? 'was-submitted' : ''}`}>
 
           {/* === 1. 고객사 === */}
           <Field label="고객사" required>
@@ -220,7 +273,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
             </div>
           </div>
 
-          {/* === 3. 요청사항 (콤보박스 + 항목관리 팝업) === */}
+          {/* === 3. 요청사항 (콤보박스 + 항목 관리 팝업) === */}
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-sm font-medium text-gray-700">
@@ -231,7 +284,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 onClick={() => setShowRequestPopup(true)}
                 className="text-xs text-primary hover:underline"
               >
-                항목관리
+                항목 관리
               </button>
             </div>
 
@@ -248,12 +301,12 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
             </select>
           </div>
 
-          {/* 요청사항 항목관리 팝업 */}
+          {/* 요청사항 항목 관리 팝업 */}
           {showRequestPopup && (
             <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center px-4" onClick={() => setShowRequestPopup(false)}>
               <div className="bg-white rounded-2xl shadow-xl w-full max-w-md animate-fadeIn" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
-                  <h3 className="text-base font-semibold text-gray-900">요청사항 항목관리</h3>
+                  <h3 className="text-base font-semibold text-gray-900">요청사항 항목 관리</h3>
                   <button type="button" onClick={() => setShowRequestPopup(false)} className="p-1 hover:bg-gray-100 rounded-lg">
                     <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -291,7 +344,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                           <span className="text-sm text-gray-700">{r}</span>
                           <button
                             type="button"
-                            onClick={() => removeRequestType(r).catch(() => alert('요청사항 삭제에 실패했습니다.'))}
+                            onClick={() => removeRequestType(r).catch(() => toast('요청사항 삭제에 실패했습니다.', 'error'))}
                             className="p-1 hover:bg-red-50 rounded transition-colors"
                           >
                             <svg className="w-4 h-4 text-gray-400 hover:text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -365,6 +418,21 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 </p>
               )}
             </div>
+            <div>
+              <span className="text-sm font-medium text-gray-700">개인부품</span>
+              <div className="relative mt-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={partsDisplay}
+                  onChange={e => handlePartsChange(e.target.value)}
+                  className="input pr-8"
+                  placeholder="0"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
+              </div>
+              <p className="mt-1 text-[11px] text-gray-400">수수료 계산에서 제외 (부품값은 기사에게 전액 지급)</p>
+            </div>
             <Field label="진행상태">
               <select
                 value={form.progressStatus}
@@ -398,12 +466,12 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                   className="input"
                 >
                   <option value="">선택</option>
-                  {stores.map(s => (
-                    <option key={s.id} value={s.name}>{s.name}</option>
+                  {teams.map(t => (
+                    <option key={t.id} value={t.name}>{t.name}</option>
                   ))}
                 </select>
               ) : (
-                <div className="space-y-2 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="space-y-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
                   <input
                     type="text"
                     value={newTeamName}
@@ -418,7 +486,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                     className="input"
                     placeholder="연락처 (선택)"
                   />
-                  <p className="text-[11px] text-blue-500">
+                  <p className="text-[11px] text-yellow-700">
                     * 추가 정보는 [팀 관리]에서 입력해주세요.
                   </p>
                 </div>
@@ -437,8 +505,30 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
             </Field>
           </div>
 
-          {/* === 6. 결제 + 공제율 === */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* === 정산 자동계산 프리뷰 === */}
+          {form.cost > 0 && form.assignee && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold text-green-700">정산 자동계산 (담당: {form.assignee})</span>
+                <span className="text-[11px] text-green-500">{settlementPreview.formula}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
+                <span>총작업비: <b className="text-gray-900">{settlementPreview.cost.toLocaleString()}원</b></span>
+                <span>개인부품: <b className="text-gray-900">{settlementPreview.personalParts.toLocaleString()}원</b></span>
+                {settlementPreview.vatDeduction > 0 && <span>부가세 차감: -{settlementPreview.vatDeduction.toLocaleString()}원</span>}
+                {settlementPreview.agencyFee > 0 && <span>대행사 수수료: -{settlementPreview.agencyFee.toLocaleString()}원</span>}
+                {settlementPreview.dunoFee > 0 && <span>두노 수수료: -{settlementPreview.dunoFee.toLocaleString()}원</span>}
+                {settlementPreview.incomeTax > 0 && <span>소득세(3.3%): -{settlementPreview.incomeTax.toLocaleString()}원</span>}
+              </div>
+              <div className="mt-2 pt-2 border-t border-green-200 flex items-baseline justify-between">
+                <span className="text-xs text-gray-600">최종 정산금</span>
+                <span className="text-lg font-bold text-primary">{settlementPreview.finalAmount.toLocaleString()}원</span>
+              </div>
+            </div>
+          )}
+
+          {/* === 6. 결제 + 공제율 + 선지급 === */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="결제">
               <select
                 value={form.payment}
@@ -454,6 +544,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
               <div className="relative">
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="0.1"
                   min="0"
                   max="100"
@@ -465,20 +556,47 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
               </div>
             </Field>
+            <div>
+              <span className="text-sm font-medium text-gray-700">선지급</span>
+              <div className="relative mt-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={prepaidDisplay}
+                  onChange={e => handlePrepaidChange(e.target.value)}
+                  className="input pr-8"
+                  placeholder="0"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">원</span>
+              </div>
+              <p className="mt-1 text-[11px] text-gray-400">미리 지급한 금액 (정산금에서 차감)</p>
+            </div>
           </div>
 
           {/* === 7. 정산 + 계산서 === */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Field label="정산상태">
-              <select
-                value={form.settlementStatus}
-                onChange={e => handleChange('settlementStatus', e.target.value)}
-                className="input"
-              >
-                {['정산대기', '정산중', '정산완료'].map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <div className="space-y-1.5">
+                <select
+                  value={form.settlementStatus}
+                  onChange={e => handleChange('settlementStatus', e.target.value)}
+                  className="input"
+                >
+                  {['정산대기', '정산완료'].map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                {form.settlementStatus === '정산완료' && (
+                  <input
+                    type="date"
+                    value={form.paidAt || ''}
+                    onChange={e => handleChange('paidAt', e.target.value)}
+                    className="input !py-1.5 !text-xs"
+                    aria-label="송금일"
+                    title="송금일"
+                  />
+                )}
+              </div>
             </Field>
             <Field label="점주님 계산서">
               <select
@@ -486,7 +604,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 onChange={e => handleChange('ownerInvoice', e.target.value)}
                 className="input"
               >
-                {['미발행', '발행중', '발행완료'].map(s => (
+                {['미발행', '발행완료'].map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -497,7 +615,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                 onChange={e => handleChange('partnerSettlement', e.target.value)}
                 className="input"
               >
-                {['미발행', '발행중', '발행완료'].map(s => (
+                {['미발행', '발행완료'].map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -563,19 +681,39 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
             );
           })()}
 
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
+          {/* === 작업 결과 (진행완료 시 기록) === */}
+          <div className={`p-3 rounded-lg border-2 ${form.progressStatus === '진행완료' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-sm font-semibold text-gray-800">✅ 작업 결과</span>
+              {form.progressStatus === '진행완료' && (
+                <span className="text-[11px] px-1.5 py-0.5 bg-green-500 text-white rounded font-semibold">완료 시 필수</span>
+              )}
+            </div>
+            <textarea
+              value={form.workResult}
+              onChange={e => handleChange('workResult', e.target.value)}
+              className="input"
+              rows={2}
+              placeholder={form.progressStatus === '진행완료' ? '실제 작업 내역을 입력해주세요 (예: 배관 청소 완료, 부품 교체 등)' : '완료 후 기록'}
+            />
+          </div>
+
+          {/* Actions — 모바일에선 sticky bottom (키보드 위 버튼 가시성) */}
+          <div
+            className="sticky bottom-0 -mx-6 -mb-6 px-6 py-3 bg-white border-t border-gray-200 flex gap-3 z-10"
+            style={{ paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))` }}
+          >
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors min-h-[44px]"
             >
               취소
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-3 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
             >
               {isSubmitting ? '처리중...' : schedule ? '수정하기' : '등록하기'}
             </button>

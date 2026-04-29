@@ -3,9 +3,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-light: #dbeafe;
+  --color-primary: #84cc16;          /* 두노케어 로고 초록 (lime-500) */
+  --color-primary-hover: #65a30d;    /* lime-600 */
+  --color-primary-light: #ecfccb;    /* lime-100 */
   --color-success: #16a34a;
   --color-success-light: #dcfce7;
   --color-warning: #d97706;
@@ -34,6 +34,9 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  /* 어르신 사용성: 기본 폰트 크기 상향 */
+  font-size: 16px;
+  line-height: 1.5;
 }
 
 * {
@@ -64,28 +67,100 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 @layer components {
+  /* 어르신 친화: 넉넉한 높이 + 큰 폰트 */
   .input {
     width: 100%;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid #d1d5db;
+    border-radius: 0.625rem;
+    font-size: 1rem;
+    line-height: 1.5;
     color: #111827;
     background: white;
     transition: border-color 0.15s, box-shadow 0.15s;
     outline: none;
+    min-height: 2.75rem;
   }
 
   .input:focus {
     border-color: #2563eb;
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
   }
 
   .input::placeholder {
     color: #9ca3af;
   }
 
+  /* 사용자 인터랙션 후 invalid 시 빨간 테두리 (브라우저 :user-invalid 지원) */
+  .input[aria-invalid="true"],
+  .input:user-invalid,
+  form.was-submitted .input:invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+  .input:user-invalid:focus,
+  form.was-submitted .input:invalid:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+  }
+
+  /* 인라인 에러 메시지 */
+  .input-error {
+    color: #dc2626;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+    display: block;
+  }
+
   textarea.input {
     resize: vertical;
+    min-height: 4rem;
+  }
+
+  /* 주요 액션 버튼 (큰 CTA) */
+  .btn-primary-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.875rem 1.5rem;
+    background: var(--color-primary);
+    color: white;
+    border-radius: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+    min-height: 3rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.15s, transform 0.1s;
+  }
+  .btn-primary-lg:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+  .btn-primary-lg:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  .btn-primary-lg:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* 보조 버튼 */
+  .btn-ghost-lg {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: white;
+    color: #374151;
+    border: 1.5px solid #d1d5db;
+    border-radius: 0.625rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    min-height: 2.75rem;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+  .btn-ghost-lg:hover:not(:disabled) {
+    background: #f9fafb;
+    border-color: #9ca3af;
   }
 }

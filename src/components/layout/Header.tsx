@@ -1,43 +1,36 @@
 'use client';
 
-const PAGE_TITLES: Record<string, string> = {
-  '/': '대시보드',
-  '/schedules': '일정 관리',
-  '/stores': '팀 관리',
-  '/settlements': '정산',
-};
-
 import { usePathname } from 'next/navigation';
+
+const PAGE_TITLES: Record<string, string> = {
+  '/': '일정 관리',
+  '/stores': '고객 관리',
+  '/teams': '팀 관리',
+  '/dashboard': '운영 현황',
+  '/settlements': '정산 관리',
+};
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
+// 모바일에서만 햄버거 메뉴 + 페이지 타이틀 표시 (데스크톱에서는 헤더 숨김)
 export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
-  const title = PAGE_TITLES[pathname] || '일정관리 어드민';
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
-  const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
-  const dayStr = dayNames[today.getDay()];
-
+  const title = PAGE_TITLES[pathname] || '두노케어';
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-8">
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onMenuClick}
-          className="lg:hidden p-2 rounded-lg hover:bg-gray-100"
-          aria-label="메뉴 열기"
-        >
-          <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
-      </div>
-      <div className="text-sm text-gray-500">
-        {dateStr} ({dayStr})
-      </div>
+    <header className="h-14 lg:hidden bg-white border-b border-gray-200 flex items-center px-2 gap-2 sticky top-0 z-30">
+      <button
+        type="button"
+        onClick={onMenuClick}
+        className="p-3 rounded-lg hover:bg-gray-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
+        aria-label="메뉴 열기"
+      >
+        <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+      <h1 className="text-base font-semibold text-gray-900 truncate">{title}</h1>
     </header>
   );
 }

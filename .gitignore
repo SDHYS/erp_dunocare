@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# Claude Code 임시 파일
+.claude/scheduled_tasks.lock
+.claude/projects/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+.vercel

@@ -1,0 +1,970 @@
+================================================================================
+  DUNOCARE ERP 프로젝트 
+================================================================================
+
+
+================================================================================
+  1. 프로젝트 개요
+================================================================================
+
+[목적]
+프랜차이즈 매장의 정비/청소 일정을 관리하는 ERP 시스템.
+관리자가 일정을 등록하면 담당 팀이 자기 일정을 확인하고 진행 상태를 업데이트한다.
+
+
+[기술 스택]
+
+  영역          기술                                선택 이유
+  -----------   --------------------------------   ----------------------------
+  프론트엔드    Next.js 16 (App Router) + React 19  SSR + API Route를 하나의 프로젝트로
+  CSS           Tailwind CSS 4                      유틸리티 클래스 기반, 빠른 UI 개발
+  데이터베이스  Supabase (PostgreSQL)                무료 호스팅 DB, REST API 제공
+  인증          커스텀 세션 토큰 (bcrypt + crypto)   직접 구현으로 구조 이해
+  배포          Vercel                               GitHub 푸시만으로 자동 배포
+  형상관리      GitHub (Private)                     소스코드 관리
+
+
+[파일 구조]
+
+  src/
+  +-- app/                            # Next.js App Router (페이지 + API)
+  |   +-- layout.tsx                  # 루트 레이아웃 (Provider 설정)
+  |   +-- page.tsx                    # 일정 관리 (메인 캘린더)
+  |   +-- globals.css                 # 전역 스타일
+  |   +-- dashboard/page.tsx          # 운영 현황 대시보드
+  |   +-- settlements/page.tsx        # 정산 관리 페이지
+  |   +-- stores/page.tsx             # 고객(매장) 관리 페이지
+  |   +-- teams/page.tsx              # 팀(기사) 관리 페이지
+  |   +-- admin-users/page.tsx        # 관리자 계정 관리 (dev/super 전용)
+  |   +-- signup/page.tsx             # 카카오 가입 완료 폼
+  |   +-- api/                        # 백엔드 API Routes
+  |       +-- auth/
+  |       |   +-- login/route.ts      # 로그인 (HttpOnly 쿠키 + rate limit)
+  |       |   +-- logout/route.ts     # 로그아웃
+  |       |   +-- session/route.ts    # 세션 확인
+  |       |   +-- dev-login/route.ts  # 개발용 자동로그인 (NODE_ENV=development 만)
+  |       |   +-- verify-admin-password/route.ts  # 민감작업 재인증
+  |       |   +-- kakao/
+  |       |       +-- start/route.ts          # OAuth 시작 (state + PKCE)
+  |       |       +-- callback/route.ts       # OAuth 콜백 (HttpOnly 쿠키)
+  |       |       +-- complete-signup/route.ts # 가입 완료
+  |       +-- schedules/
+  |       |   +-- route.ts            # 일정 목록/등록 (cost 마스킹 for store)
+  |       |   +-- [id]/route.ts       # 일정 수정/삭제 (mass-assignment 가드)
+  |       +-- teams/
+  |       |   +-- route.ts            # 팀 목록/등록
+  |       |   +-- [id]/route.ts       # 팀 수정/삭제
+  |       +-- stores/
+  |       |   +-- route.ts            # 매장 목록/등록
+  |       |   +-- [id]/route.ts       # 매장 수정/삭제
+  |       +-- admin-users/
+  |       |   +-- route.ts            # 관리자 목록/생성 (dev/super)
+  |       |   +-- [id]/route.ts       # 관리자 수정/삭제 (dev = 모두, super = admin만)
+  |       +-- request-types/
+  |           +-- route.ts            # 요청사항 목록/등록
+  |           +-- [id]/route.ts       # 요청사항 삭제
+  +-- components/                     # 재사용 컴포넌트
+  |   +-- layout/
+  |   |   +-- AppShell.tsx            # 전체 레이아웃 쉘
+  |   |   +-- Header.tsx              # 모바일 헤더 (햄버거)
+  |   |   +-- Sidebar.tsx             # 좌측 네비게이션 (로고/시계/메뉴/사용자카드)
+  |   |   +-- LoginPage.tsx           # 로그인 화면
+  |   +-- schedules/
+  |   |   +-- Calendar.tsx            # 캘린더 컴포넌트
+  |   |   +-- ScheduleForm.tsx        # 일정 등록/수정 폼 (선지급/송금일 포함)
+  |   |   +-- ScheduleTable.tsx       # 일정 목록 테이블
+  |   |   +-- StoreRequestForm.tsx    # 점주 신청 폼
+  |   +-- ui/                         # PortalDropdown, StatusBadge, Toast
+  +-- lib/                            # 유틸리티
+  |   +-- supabase-admin.ts           # Supabase 서버 클라이언트 (service_role)
+  |   +-- session.ts                  # 세션 검증 (쿠키 우선, 헤더 폴백)
+  |   +-- auth-cookie.ts              # HttpOnly 세션 쿠키 헬퍼
+  |   +-- rate-limit.ts               # 로그인 시도 제한 (DB 기반)
+  |   +-- password-policy.ts          # 비밀번호 정책 검증
+  |   +-- schedule-mapper.ts          # schedules row → DTO 매퍼 + store 마스킹
+  |   +-- settlement.ts               # 정산금 계산 (simple/max_care/custom)
+  |   +-- api.ts                      # 클라이언트 API 호출 헬퍼
+  +-- store/                          # 상태 관리 (React Context)
+  |   +-- authStore.tsx               # 인증 상태 (HttpOnly 쿠키)
+  |   +-- scheduleStore.tsx           # 일정/팀/매장/요청사항 상태
+  +-- types/
+      +-- index.ts                    # TypeScript 타입 정의
+
+
+================================================================================
+  2. 핵심 개념별 학습
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  2-1. Next.js App Router 구조
+--------------------------------------------------------------------------------
+
+Next.js 13+ 부터 도입된 App Router는 app/ 디렉토리 기반이다.
+
+[페이지 라우팅]
+
+  app/page.tsx            -->  /           (일정 관리 / 메인 캘린더)
+  app/dashboard/page.tsx  -->  /dashboard  (운영 현황)
+  app/settlements/page.tsx-->  /settlements(정산 관리)
+  app/stores/page.tsx     -->  /stores     (고객 매장 관리)
+  app/teams/page.tsx      -->  /teams      (팀/기사 관리)
+  app/admin-users/page.tsx-->  /admin-users(관리자 계정 관리, dev/super 전용)
+
+  - page.tsx 파일이 있는 폴더가 하나의 URL 경로가 된다.
+  - layout.tsx는 하위 모든 페이지에 공통 적용되는 래퍼.
+
+[API Route]
+
+  app/api/auth/login/route.ts      -->  POST /api/auth/login
+  app/api/schedules/route.ts       -->  GET/POST /api/schedules
+  app/api/schedules/[id]/route.ts  -->  PUT/DELETE /api/schedules/:id
+
+  - route.ts 파일에서 GET, POST, PUT, DELETE 함수를 export하면
+    HTTP 메서드별 핸들러가 된다.
+  - [id]는 동적 세그먼트 (URL 파라미터).
+
+[주의: Next.js 16에서 params는 Promise]
+
+  // Next.js 15까지
+  export async function PUT(
+    request: Request,
+    { params }: { params: { id: string } }
+  ) {
+    const id = params.id;  // 동기 접근
+  }
+
+  // Next.js 16부터 (이 프로젝트)
+  export async function PUT(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+  ) {
+    const { id } = await params;  // 비동기 접근 (await 필수)
+  }
+
+['use client' 디렉티브]
+
+  'use client';  // 파일 최상단에 선언
+
+  - App Router의 컴포넌트는 기본적으로 서버 컴포넌트(Server Component).
+  - useState, useEffect, onClick 등 브라우저 기능을 쓰려면 'use client' 선언 필수.
+  - API Route(route.ts)는 항상 서버에서 실행되므로 선언 불필요.
+
+
+--------------------------------------------------------------------------------
+  2-2. 데이터베이스 설계 (Supabase + PostgreSQL)
+--------------------------------------------------------------------------------
+
+[테이블 구조]
+
+  -- 관리자 계정
+  CREATE TABLE admin_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    login_id TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,      -- bcrypt 해시 (평문 저장 금지)
+    name TEXT NOT NULL DEFAULT '관리자'
+  );
+
+  -- 팀 (협력사)
+  CREATE TABLE teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    address TEXT DEFAULT '',
+    contact TEXT DEFAULT '',
+    login_id TEXT UNIQUE,             -- 로그인용 아이디 (선택)
+    password_hash TEXT                -- bcrypt 해시 (선택)
+  );
+
+  -- 일정
+  CREATE TABLE schedules (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    date DATE NOT NULL,
+    store_name TEXT NOT NULL,
+    request TEXT NOT NULL,
+    cost INTEGER NOT NULL DEFAULT 0,
+    progress_status TEXT NOT NULL DEFAULT '접수'
+      CHECK (progress_status IN ('접수','배정중','진행중','진행완료','일정연기','취소')),
+    assignee TEXT DEFAULT '',
+    settlement_status TEXT NOT NULL DEFAULT '정산대기'
+      CHECK (settlement_status IN ('정산대기','정산완료')),
+      -- (이전: '정산대기','정산중','정산완료' — 2026-04 마이그레이션 011 에서 단순화)
+    -- ... 기타 필드
+  );
+
+  -- 세션 관리
+  CREATE TABLE app_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_role TEXT NOT NULL CHECK (user_role IN ('admin', 'team')),
+    user_name TEXT NOT NULL,
+    team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
+    token TEXT UNIQUE NOT NULL,       -- 256비트 랜덤 토큰
+    expires_at TIMESTAMPTZ NOT NULL   -- 24시간 후 만료
+  );
+
+[핵심 설계 포인트]
+
+  UUID          자동 생성되는 고유 ID. 순차 ID보다 보안에 유리 (추측 불가)
+  CHECK 제약    DB 레벨에서 허용 값을 강제. 잘못된 데이터 삽입 자체를 차단
+  password_hash 비밀번호를 절대 평문 저장하지 않음. bcrypt로 해시
+  RLS           Row Level Security - 테이블별 접근 정책.
+                이 프로젝트에서는 ALLOW 정책 없이 service_role로만 접근
+
+[Supabase 접근 방식]
+
+  [브라우저] --> [Next.js API Route] --> [Supabase DB]
+                  (service_role 키)
+
+  - 브라우저가 직접 Supabase에 접근하지 않음.
+  - API Route가 중간에서 인증/권한 체크 후 DB에 접근.
+  - service_role 키는 RLS를 우회하므로 서버에서만 사용.
+
+
+--------------------------------------------------------------------------------
+  2-3. 인증(Authentication) 시스템
+--------------------------------------------------------------------------------
+
+이 프로젝트는 세션 기반 인증을 직접 구현했다.
+
+[전체 흐름]
+
+  1. [로그인 화면] --> POST /api/auth/login (아이디, 비밀번호)
+  2. [서버] DB에서 아이디로 사용자 조회
+  3. [서버] bcrypt.compare(입력비번, 저장된해시)로 검증
+  4. [서버] 256비트 랜덤 토큰 생성 --> app_sessions 테이블에 저장
+  5. [서버] 토큰을 클라이언트에 반환
+  6. [브라우저] sessionStorage에 토큰 저장
+  7. [이후 모든 API 요청] x-session-token 헤더에 토큰 첨부
+
+[로그인 API 코드 핵심 부분]
+
+  // 1. 비밀번호 검증 (bcrypt)
+  const valid = await bcrypt.compare(password, admin.password_hash);
+
+  // 2. 토큰 생성 (256비트 = 64자 hex 문자열)
+  const token = crypto.randomBytes(32).toString('hex');
+
+  // 3. 세션 저장 (24시간 만료)
+  await supabase.from('app_sessions').insert({
+    user_role: 'admin',
+    user_name: admin.name,
+    token,
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  });
+
+  // 4. 응답
+  return Response.json({ token, user: { role: 'admin', name: admin.name } });
+
+[세션 검증 (모든 API 요청마다)]
+
+  // lib/session.ts
+  export async function validateSession(request: Request) {
+    const token = request.headers.get('x-session-token');
+    if (!token) return null;
+
+    const { data } = await supabase
+      .from('app_sessions')
+      .select('user_role, user_name, team_id')
+      .eq('token', token)
+      .gt('expires_at', new Date().toISOString())  // 만료 체크
+      .single();
+
+    return data ? { role: data.user_role, name: data.user_name } : null;
+  }
+
+[클라이언트에서 토큰 자동 첨부]
+
+  // lib/api.ts - 모든 API 요청에 토큰을 자동으로 붙여주는 헬퍼
+  export async function apiFetch(path: string, options: RequestInit = {}) {
+    const token = sessionStorage.getItem('session_token');
+    const headers = new Headers(options.headers);
+    if (token) headers.set('x-session-token', token);
+    // ...
+  }
+
+
+--------------------------------------------------------------------------------
+  2-4. 보안 처리 (Security)
+--------------------------------------------------------------------------------
+
+이 프로젝트에서 적용한 주요 보안 패턴:
+
+(1) 비밀번호 해싱 - bcrypt
+
+  // 저장 시 (팀 등록)
+  const hash = await bcrypt.hash(password, 10);  // cost factor 10
+
+  // 검증 시 (로그인)
+  const valid = await bcrypt.compare(inputPassword, storedHash);
+
+  - 평문 비밀번호를 DB에 저장하면 DB 유출 시 모든 계정이 노출됨.
+  - bcrypt는 단방향 해시 + salt로 원문 복원이 불가능.
+  - cost factor 10 = 해시 계산을 2^10번 반복 --> 무차별 대입 공격 방어.
+
+(2) 타이밍 공격 방어
+
+  const DUMMY_HASH = bcrypt.hashSync('dummy-password-never-matches', 10);
+
+  // 사용자가 없을 때도 bcrypt.compare 실행
+  if (!userFound) {
+    await bcrypt.compare(password, DUMMY_HASH);  // 시간을 동일하게 소모
+    return { error: GENERIC_ERROR };
+  }
+
+  - 아이디가 존재하지 않으면 bcrypt를 건너뛰고 바로 응답
+    --> 응답 시간 차이로 아이디 존재 여부 추측 가능.
+  - 더미 해시로 bcrypt를 항상 실행하여 응답 시간을 균일하게 만듦.
+
+(3) 계정 열거 방지
+
+  const GENERIC_ERROR = '아이디 또는 비밀번호가 올바르지 않습니다.';
+
+  - "아이디가 없습니다" vs "비밀번호가 틀립니다" 를 구분하면
+    공격자가 유효한 아이디를 찾을 수 있음.
+  - 통일된 에러 메시지로 어떤 정보도 노출하지 않음.
+
+(4) IDOR 방지 (Insecure Direct Object Reference)
+
+  // 팀 사용자가 일정 수정 시
+  if (user.role === 'team') {
+    const { data: existing } = await supabase
+      .from('schedules')
+      .select('assignee')
+      .eq('id', id)
+      .single();
+
+    if (existing.assignee !== user.name) return forbidden();
+  }
+
+  - URL에 다른 사람의 일정 ID를 넣어 수정하는 공격 차단.
+  - DB에서 실제 소유자를 확인한 후 본인 것만 허용.
+
+(5) 권한 기반 필드 제어
+
+  const TEAM_ALLOWED_FIELDS = new Set([
+    'progressStatus', 'maintenanceTime', 'notes', 'satisfaction', 'fieldManager',
+  ]);
+
+  const ADMIN_ONLY_FIELDS = new Set([
+    'cost', 'settlementAmount', 'deductionRate', 'settlementStatus',
+    'ownerInvoice', 'partnerSettlement', 'payment', 'assignee',
+  ]);
+
+  - 팀 사용자가 비용이나 정산 필드를 조작하는 것을 서버에서 차단.
+  - 프론트엔드에서 숨기는 것만으로는 부족 (개발자 도구로 우회 가능).
+
+(6) 서버 전용 모듈 보호
+
+  // lib/supabase-admin.ts
+  import 'server-only';  // 이 한 줄이 핵심
+
+  - server-only 패키지: 이 파일을 클라이언트 번들에 포함하려 하면 빌드 에러 발생.
+  - service_role 키가 브라우저에 노출되는 것을 원천 차단.
+
+
+--------------------------------------------------------------------------------
+  2-5. 상태 관리 (React Context)
+--------------------------------------------------------------------------------
+
+이 프로젝트는 외부 라이브러리(Redux, Zustand 등) 없이 React Context로 상태를 관리한다.
+
+[Provider 구조 (layout.tsx)]
+
+  <AuthProvider>           {/* 인증 상태 (로그인/로그아웃) */}
+    <ScheduleProvider>     {/* 데이터 상태 (일정/팀/요청사항) */}
+      <AppShell>           {/* 레이아웃 (사이드바, 헤더) */}
+        {children}         {/* 각 페이지 */}
+      </AppShell>
+    </ScheduleProvider>
+  </AuthProvider>
+
+  - AuthProvider가 바깥: ScheduleProvider가 useAuth()를 사용하므로.
+  - Provider 순서가 잘못되면 "must be used within Provider" 에러 발생.
+
+[Context 생성 패턴]
+
+  // 1. 타입 정의
+  interface AuthContextType {
+    user: AuthUser | null;
+    login: (id: string, password: string) => Promise<string | null>;
+    logout: () => Promise<void>;
+  }
+
+  // 2. Context 생성
+  const AuthContext = createContext<AuthContextType | null>(null);
+
+  // 3. Provider 컴포넌트
+  export function AuthProvider({ children }) {
+    const [user, setUser] = useState<AuthUser | null>(null);
+    // ... 로직
+
+    return (
+      <AuthContext.Provider value={{ user, login, logout }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
+  // 4. Hook으로 사용
+  export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) throw new Error('useAuth must be used within AuthProvider');
+    return context;
+  }
+
+[useCallback으로 함수 안정화]
+
+  const addSchedule = useCallback(async (schedule) => {
+    const res = await apiFetch('/api/schedules', {
+      method: 'POST',
+      body: JSON.stringify(schedule),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setSchedules(prev => [...prev, created]);  // 낙관적 업데이트
+    }
+  }, []);  // 의존성 없음 --> 함수 참조 고정
+
+  - useCallback 없이 Provider 내에서 함수를 만들면 리렌더링마다 새 함수가 생성됨.
+  - 이를 사용하는 하위 컴포넌트가 불필요하게 리렌더링되는 것을 방지.
+
+
+--------------------------------------------------------------------------------
+  2-6. CSS 설계 (Tailwind CSS)
+--------------------------------------------------------------------------------
+
+[커스텀 클래스와 Tailwind 우선순위 문제]
+
+  /* 문제 발생 코드 */
+  .input {
+    padding: 0.5rem 0.75rem;  /* 이 padding이 Tailwind의 pl-10을 덮어씀 */
+  }
+
+  /* 해결: @layer components로 감싸기 */
+  @layer components {
+    .input {
+      padding: 0.5rem 0.75rem;  /* Tailwind 유틸리티보다 낮은 우선순위 */
+    }
+  }
+
+  <!-- 검색 아이콘이 있는 input -->
+  <div class="relative">
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2" />  <!-- 아이콘 -->
+    <input class="input pl-10" />  <!-- pl-10으로 왼쪽 여백 확보 -->
+  </div>
+
+  - @layer components 안의 스타일은 Tailwind 유틸리티(pl-10)보다 우선순위가 낮음.
+  - 따라서 pl-10이 .input의 padding을 정상적으로 덮어쓸 수 있음.
+  - 이 원리를 모르면 모바일에서 검색 아이콘과 텍스트가 겹치는 버그 발생.
+
+[반응형 디자인 패턴]
+
+  <!-- 모바일: 숨김 / 데스크톱: 테이블 -->
+  <div class="hidden lg:block">
+    <table>...</table>
+  </div>
+
+  <!-- 모바일: 카드 / 데스크톱: 숨김 -->
+  <div class="lg:hidden">
+    <div class="p-4">카드 형태</div>
+  </div>
+
+  - hidden lg:block = 기본 숨김, 1024px 이상에서 표시.
+  - lg:hidden = 1024px 이상에서 숨김.
+  - 하나의 페이지에서 데스크톱/모바일 UI를 각각 작성하는 패턴.
+
+
+--------------------------------------------------------------------------------
+  2-7. camelCase <-> snake_case 변환
+--------------------------------------------------------------------------------
+
+DB는 snake_case (PostgreSQL 관례), TypeScript는 camelCase 사용.
+
+  // DB 컬럼: store_name, progress_status, settlement_amount
+  // TS 필드: storeName, progressStatus, settlementAmount
+
+  // API Route에서 변환
+  const FIELD_MAP: Record<string, string> = {
+    storeName: 'store_name',
+    progressStatus: 'progress_status',
+    settlementAmount: 'settlement_amount',
+    // ...
+  };
+
+  // DB --> 클라이언트 응답
+  return Response.json({
+    id: data.id,
+    storeName: data.store_name,          // snake --> camel
+    progressStatus: data.progress_status,
+  });
+
+  // 클라이언트 --> DB 업데이트
+  for (const [camelKey, snakeKey] of Object.entries(FIELD_MAP)) {
+    if (body[camelKey] !== undefined) {
+      updates[snakeKey] = body[camelKey];  // camel --> snake
+    }
+  }
+
+
+================================================================================
+  3. 프로젝트 설정 & 배포 과정
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  3-1. 로컬 개발 환경 세팅
+--------------------------------------------------------------------------------
+
+  # 1. 프로젝트 생성
+  npx create-next-app@latest schedule-admin
+
+  # 2. 의존성 설치
+  npm install @supabase/supabase-js bcryptjs server-only
+  npm install -D @types/bcryptjs
+
+  # 3. 환경변수 파일 생성
+  # .env.local (이 파일은 .gitignore에 포함 --> 절대 GitHub에 올리지 않음)
+  NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+  SUPABASE_SERVICE_ROLE_KEY=eyJ...
+
+  # 4. 개발 서버 실행
+  npm run dev
+
+
+--------------------------------------------------------------------------------
+  3-2. Supabase 설정
+--------------------------------------------------------------------------------
+
+  1. supabase.com 가입 --> New Project 생성
+  2. SQL Editor에서 supabase-schema.sql 실행 (테이블 + 인덱스 + RLS)
+  3. Settings --> API에서 Project URL, anon key, service role key 복사
+  4. .env.local에 저장
+
+
+--------------------------------------------------------------------------------
+  3-3. GitHub + Vercel 배포
+--------------------------------------------------------------------------------
+
+  # GitHub 저장소 생성 및 연결
+  git init
+  git remote add origin https://github.com/SDHYS/erp_dunocare.git
+  git add .
+  git commit -m "initial commit"
+  git push -u origin main
+
+  Vercel 배포:
+  1. vercel.com에서 GitHub 연동 --> erp_dunocare 리포 import
+  2. Settings --> Environment Variables에 3개 환경변수 설정
+     (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY)
+  3. Deploy --> 이후 GitHub push할 때마다 자동 배포
+
+
+--------------------------------------------------------------------------------
+  3-4. 환경변수 네이밍 규칙
+--------------------------------------------------------------------------------
+
+  NEXT_PUBLIC_ 접두어가 있으면:
+  --> 브라우저 번들에 포함됨 (클라이언트에서 접근 가능)
+  --> 민감하지 않은 값만 사용 (URL, anon key)
+
+  NEXT_PUBLIC_ 접두어가 없으면:
+  --> 서버에서만 접근 가능
+  --> 민감한 값에 사용 (service_role key)
+
+
+================================================================================
+  4. 주요 문제 해결 사례
+================================================================================
+
+[4-1] localStorage --> DB 마이그레이션
+
+  문제: 초기 구현은 localStorage 기반 --> 각 기기별로 데이터가 분리됨
+  해결: Supabase DB + API Route로 전환
+
+  Before: [브라우저] --> localStorage (각 기기 독립)
+  After:  [브라우저] --> [API Route] --> [Supabase DB] (공유)
+
+  영향 범위: store 2개 전체 재작성 + API route 9개 신규 작성
+
+[4-2] 모바일 검색창 텍스트 겹침
+
+  문제: .input CSS가 Tailwind pl-10보다 높은 우선순위 --> padding-left 덮어씀
+  해결: .input을 @layer components로 감싸 Tailwind 유틸리티보다 낮은 우선순위로 변경
+
+[4-3] bcrypt 더미 해시 오류
+
+  문제: '$2b$10$dummyhashvalue...' 문자열 리터럴은 유효한 bcrypt 해시가 아님
+        --> compare 시 에러
+  해결: bcrypt.hashSync('dummy-password-never-matches', 10)으로 실제 해시 생성
+
+[4-4] API 401 응답 시 unhandled rejection
+
+  문제: apiFetch에서 401 시 throw 후 window.location.reload()
+        --> reload 전에 throw가 잡히지 않음
+  해결: throw 대신 return res로 변경 --> 호출부에서 처리
+
+[4-5] hasPassword가 항상 false
+
+  문제: teams API에서 password_hash를 select하지 않아 항상 false
+  해결: select에 password_hash 추가,
+        응답에서는 hasPassword: !!row.password_hash로 변환
+        (해시 자체는 절대 반환하지 않음)
+
+
+================================================================================
+  5. 핵심 학습 포인트 요약
+================================================================================
+
+[아키텍처]
+  1.  프론트와 백엔드를 하나의 프로젝트에서 관리 (Next.js App Router)
+  2.  API Route가 중간 계층 역할 --> 브라우저는 DB에 직접 접근하지 않음
+  3.  서버 전용 코드는 import 'server-only'로 보호
+
+[보안]
+  4.  비밀번호는 반드시 bcrypt 해시로 저장
+  5.  세션 토큰은 충분히 긴 랜덤 값 (256비트 = 64자 hex)
+  6.  서버에서 권한 체크 필수 (프론트엔드만으로는 부족)
+  7.  에러 메시지에서 정보 노출 금지 (아이디 존재 여부 등)
+  8.  환경변수의 NEXT_PUBLIC_ 접두어로 공개/비공개 구분
+
+[React 패턴]
+  9.  Context + Provider 패턴으로 전역 상태 관리
+  10. useCallback으로 함수 참조 안정화
+  11. Provider 순서가 의존성에 맞아야 함
+
+[CSS]
+  12. @layer components로 커스텀 클래스의 우선순위 제어
+  13. hidden/block + 브레이크포인트로 반응형 UI 전환
+
+[DB]
+  14. CHECK 제약으로 DB 레벨에서 데이터 무결성 보장
+  15. UUID를 ID로 사용하여 순차 추측 방지
+  16. snake_case <-> camelCase 변환 레이어를 API Route에서 처리
+
+
+================================================================================
+  6. 사용된 주요 라이브러리
+================================================================================
+
+  라이브러리              용도              핵심 API
+  ---------------------  ----------------  -----------------------------------
+  next 16                프레임워크         App Router, API Routes
+  react 19               UI                useState, useEffect, useContext,
+                                           useCallback
+  @supabase/supabase-js  DB 클라이언트     createClient, from().select().eq()
+  bcryptjs               비밀번호 해싱     hash(), compare(), hashSync()
+  server-only            서버 전용 보호    import만으로 동작
+  tailwindcss 4          CSS 프레임워크    유틸리티 클래스, @layer
+
+
+================================================================================
+================================================================================
+  면접 대비 - 프로젝트 설명 & 기술 선택 이유
+================================================================================
+================================================================================
+
+
+================================================================================
+  7. 프로젝트 한 줄 소개 (30초 엘리베이터 피치)
+================================================================================
+
+"프랜차이즈 매장의 정비/청소 일정을 관리하는 ERP 시스템입니다.
+ 관리자가 일정을 등록하면 현장 팀이 모바일로 자기 배정 일정을 확인하고
+ 진행 상태를 업데이트하는 구조입니다.
+ Next.js App Router로 프론트와 백엔드를 한 프로젝트에서 관리하고,
+ Supabase PostgreSQL로 데이터를 저장하며,
+ 커스텀 세션 기반 인증과 역할별 접근 제어를 직접 구현했습니다."
+
+
+================================================================================
+  8. "왜 이 기술을 선택했나요?" 예상 질문 & 답변
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  Q. Next.js를 선택한 이유는?
+--------------------------------------------------------------------------------
+
+  A. 이 프로젝트는 관리자용 웹 어플리케이션이라 프론트엔드와 백엔드 API가
+     모두 필요했습니다. Next.js App Router를 쓰면 하나의 프로젝트 안에서
+     페이지(React)와 API Route(서버)를 함께 관리할 수 있어 별도의 백엔드
+     서버를 구축할 필요가 없었습니다.
+
+  +) 꼬리질문 대비:
+  "Pages Router 대신 App Router를 쓴 이유는?"
+  --> App Router가 Next.js의 공식 권장 방식이고, 서버 컴포넌트를 기본으로
+      지원해서 클라이언트 번들 크기를 줄일 수 있습니다. layout.tsx로
+      공통 레이아웃을 자연스럽게 중첩할 수 있는 것도 장점입니다.
+
+
+--------------------------------------------------------------------------------
+  Q. DB로 Supabase를 선택한 이유는?
+--------------------------------------------------------------------------------
+
+  A. 초기에는 localStorage로 구현했는데, 이러면 각 기기별로 데이터가
+     분리되어 관리자가 등록한 일정을 팀원이 볼 수 없는 문제가 있었습니다.
+     실제 DB가 필요했고, Supabase는 무료 티어로 PostgreSQL을 호스팅해주면서
+     별도 서버 없이 바로 사용할 수 있어 선택했습니다.
+     프로젝트 규모가 커지면 AWS RDS로 전환할 수 있도록 API Route 계층을
+     중간에 두었습니다.
+
+  +) 꼬리질문 대비:
+  "Supabase 클라이언트를 브라우저에서 직접 쓰지 않은 이유는?"
+  --> service_role 키가 브라우저에 노출되면 RLS를 우회해서 모든 데이터에
+      접근 가능합니다. API Route를 중간에 두고 서버에서만 DB에 접근하게 해서
+      키 노출을 원천 차단했습니다.
+
+
+--------------------------------------------------------------------------------
+  Q. 상태 관리를 Redux/Zustand 대신 Context로 한 이유는?
+--------------------------------------------------------------------------------
+
+  A. 이 프로젝트의 상태는 크게 두 가지(인증, 일정 데이터)뿐이고,
+     상태 간 복잡한 의존 관계가 없습니다. Redux는 보일러플레이트가 많고,
+     이 규모에서는 오버엔지니어링입니다. Context + useCallback 조합으로
+     충분히 관리 가능했고, 외부 의존성을 줄이는 것도 장점이었습니다.
+
+  +) 꼬리질문 대비:
+  "Context의 단점은 알고 있나요?"
+  --> Context value가 바뀌면 해당 Provider 하위의 모든 소비 컴포넌트가
+      리렌더링됩니다. 상태가 많아지면 Context를 분리하거나 Zustand 같은
+      라이브러리로 전환이 필요합니다. 이 프로젝트는 Provider를 2개로
+      분리(Auth, Schedule)해서 리렌더링 범위를 제한했습니다.
+
+
+--------------------------------------------------------------------------------
+  Q. 인증을 직접 구현한 이유는? NextAuth 같은 라이브러리를 안 쓴 이유?
+--------------------------------------------------------------------------------
+
+  A. 이 시스템은 관리자와 현장팀 두 가지 역할만 있고,
+     소셜 로그인이 필요 없는 단순한 아이디/비밀번호 인증입니다.
+     NextAuth는 OAuth 프로바이더 연동에 강점이 있지만 이 경우엔
+     불필요한 추상화 레이어가 추가됩니다.
+     직접 구현하면서 세션 토큰 발급, bcrypt 해싱, 타이밍 공격 방어 등
+     인증의 핵심 원리를 이해하고 적용할 수 있었습니다.
+
+
+--------------------------------------------------------------------------------
+  Q. Tailwind CSS를 선택한 이유는?
+--------------------------------------------------------------------------------
+
+  A. 관리자 도구는 디자인 시스템을 처음부터 만들기보다 빠르게 깔끔한
+     UI를 구성하는 게 중요합니다. Tailwind는 유틸리티 클래스 기반이라
+     별도 CSS 파일 없이 컴포넌트 안에서 바로 스타일링할 수 있어
+     개발 속도가 빠르고, 반응형 디자인도 브레이크포인트 접두어(lg:, sm:)로
+     쉽게 적용할 수 있습니다.
+
+
+--------------------------------------------------------------------------------
+  Q. TypeScript를 사용한 이유는?
+--------------------------------------------------------------------------------
+
+  A. 일정 데이터에 다양한 상태값(진행상태 6종, 만족도 5종, 결제 4종 등)이
+     있어서 타입 없이 개발하면 오타나 잘못된 값 할당을 런타임에서야
+     발견하게 됩니다. TypeScript의 Union Type으로 허용 값을 컴파일 타임에
+     강제했고, API 요청/응답의 인터페이스도 명확하게 정의해서
+     프론트-백엔드 간 데이터 불일치를 방지했습니다.
+
+
+================================================================================
+  9. "이 부분은 어떻게 구현했나요?" 예상 질문 & 답변
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  Q. 역할별 접근 제어는 어떻게 구현했나요?
+--------------------------------------------------------------------------------
+
+  A. 두 단계로 구현했습니다.
+
+  1단계 - API 레벨:
+     모든 API Route에서 세션 토큰을 검증하고, user.role을 확인합니다.
+     예를 들어 일정 삭제는 admin만 가능하도록 서버에서 차단합니다.
+
+     if (user.role !== 'admin') return forbidden();
+
+  2단계 - 필드 레벨:
+     팀 사용자가 일정을 수정할 때, TEAM_ALLOWED_FIELDS에 정의된
+     필드만 수정 가능합니다. 비용이나 정산 관련 필드는 ADMIN_ONLY_FIELDS로
+     분류해서 팀 사용자의 요청에 포함되면 403을 반환합니다.
+
+     중요한 건 프론트엔드에서 UI를 숨기는 것만으로는 부족하다는 점입니다.
+     개발자 도구로 API를 직접 호출할 수 있으므로 서버에서 반드시
+     검증해야 합니다.
+
+
+--------------------------------------------------------------------------------
+  Q. 세션 관리는 어떻게 했나요? JWT를 안 쓴 이유는?
+--------------------------------------------------------------------------------
+
+  A. DB 기반 세션 토큰 방식을 사용했습니다.
+
+     로그인 시 crypto.randomBytes(32)로 256비트 랜덤 토큰을 생성하고
+     app_sessions 테이블에 저장합니다. 클라이언트는 sessionStorage에
+     토큰을 보관하고, 매 API 요청마다 x-session-token 헤더로 전송합니다.
+
+     JWT를 안 쓴 이유:
+     - JWT는 서버에서 즉시 무효화(강제 로그아웃)하기 어렵습니다.
+     - 이 시스템은 관리자가 필요 시 특정 세션을 즉시 만료시킬 수 있어야
+       하는데, DB 기반 세션은 해당 row를 삭제하면 즉시 무효화됩니다.
+     - JWT의 장점(서버 상태 불필요)은 대규모 분산 시스템에서 의미 있지만,
+       이 규모에서는 DB 조회 비용이 무시할 수 있는 수준입니다.
+
+
+--------------------------------------------------------------------------------
+  Q. IDOR 공격은 어떻게 방어했나요?
+--------------------------------------------------------------------------------
+
+  A. IDOR(Insecure Direct Object Reference)은 URL의 ID를 바꿔서
+     다른 사용자의 데이터에 접근하는 공격입니다.
+
+     예: PUT /api/schedules/다른팀의일정ID 로 수정 시도
+
+     방어: 팀 사용자가 일정을 수정할 때, 먼저 DB에서 해당 일정의
+     assignee(담당자)를 조회하고, 요청자의 이름과 일치하는지 확인합니다.
+     일치하지 않으면 403 Forbidden을 반환합니다.
+
+     관리자는 모든 일정에 접근 가능하므로 이 체크를 건너뜁니다.
+
+
+--------------------------------------------------------------------------------
+  Q. 비밀번호 보안은 어떻게 처리했나요?
+--------------------------------------------------------------------------------
+
+  A. 세 가지를 적용했습니다.
+
+  1) bcrypt 해싱 (cost factor 10):
+     평문 비밀번호를 절대 DB에 저장하지 않습니다.
+     bcrypt는 salt를 자동 생성하고, 2^10번 반복 해싱하여
+     레인보우 테이블 공격과 무차별 대입 공격을 방어합니다.
+
+  2) 타이밍 공격 방어:
+     존재하지 않는 아이디로 로그인 시도하면 bcrypt 비교를 건너뛰게 되는데,
+     이 경우 응답 시간이 빨라져서 아이디 존재 여부를 추측할 수 있습니다.
+     더미 해시로 항상 bcrypt.compare를 실행해서 응답 시간을 균일하게 합니다.
+
+  3) 통일된 에러 메시지:
+     "아이디가 없습니다" / "비밀번호가 틀립니다"를 구분하지 않고
+     "아이디 또는 비밀번호가 올바르지 않습니다"로 통일합니다.
+
+
+================================================================================
+  10. "프로젝트에서 어려웠던 점은?" 예상 질문 & 답변
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  Q. 가장 어려웠던 기술적 문제는?
+--------------------------------------------------------------------------------
+
+  A. localStorage에서 Supabase DB로 마이그레이션하는 과정이 가장 컸습니다.
+
+     단순히 저장소만 바꾸는 게 아니라, 인증 체계 전체를 재설계해야 했습니다.
+     localStorage 기반에서는 클라이언트에서 모든 걸 처리했지만,
+     DB 기반에서는 API Route 계층이 필요하고, 세션 토큰 발급/검증,
+     역할별 접근 제어를 서버에서 처리해야 합니다.
+
+     store 2개를 전면 재작성하고 API route 9개를 새로 만들었는데,
+     각 API에서 인증 검증, 권한 체크, 입력 검증, 에러 처리를
+     일관성 있게 적용하는 것이 핵심이었습니다.
+
+
+--------------------------------------------------------------------------------
+  Q. CSS 관련 이슈는 없었나요?
+--------------------------------------------------------------------------------
+
+  A. 모바일에서 검색 입력창의 아이콘과 텍스트가 겹치는 버그가 있었습니다.
+
+     원인은 CSS 우선순위 문제였는데, 커스텀 .input 클래스의 padding이
+     Tailwind의 pl-10 유틸리티를 덮어쓰고 있었습니다.
+     Tailwind CSS 4에서 @import "tailwindcss"로 가져온 유틸리티는
+     @layer utilities에 들어가는데, 제 .input은 layer 밖에 있어서
+     CSS 캐스케이드 규칙상 layer 밖 스타일이 우선됩니다.
+
+     해결은 .input을 @layer components로 감싸는 것이었습니다.
+     layer 순서가 base < components < utilities 이므로
+     utilities의 pl-10이 components의 .input padding을 정상적으로
+     덮어쓸 수 있게 됩니다.
+
+
+--------------------------------------------------------------------------------
+  Q. 보안 관련해서 신경 쓴 점은?
+--------------------------------------------------------------------------------
+
+  A. 바이브 코딩(AI 코딩)으로 빠르게 개발한 후, 보안 취약점을
+     체계적으로 점검했습니다. 주요 체크리스트:
+
+     - service_role 키가 클라이언트에 노출되지 않는지 (server-only)
+     - 모든 API에 인증/인가 체크가 있는지
+     - 팀 사용자가 다른 팀의 데이터에 접근할 수 없는지 (IDOR)
+     - 팀 사용자가 관리자 전용 필드를 수정할 수 없는지 (Mass Assignment)
+     - 비밀번호가 평문으로 저장/반환되지 않는지
+     - API 에러 메시지에서 내부 정보가 노출되지 않는지
+
+     특히 프론트엔드에서 숨기는 것과 서버에서 차단하는 것은
+     완전히 다르다는 점을 명확히 인식하고, 모든 보안 로직은
+     서버(API Route)에서 처리했습니다.
+
+
+================================================================================
+  11. "향후 개선 계획은?" 예상 질문 & 답변
+================================================================================
+
+
+--------------------------------------------------------------------------------
+  Q. 확장하거나 개선한다면?
+--------------------------------------------------------------------------------
+
+  A. 세 가지를 계획하고 있습니다.
+
+  1) AWS 전환:
+     현재 Supabase 무료 티어는 7일 미사용 시 정지되는 제약이 있습니다.
+     AWS RDS (PostgreSQL) + ECS (Docker)로 전환하면 이 제약이 사라지고,
+     트래픽 증가 시 스케일링도 가능합니다.
+     코드 변경은 Supabase 클라이언트를 Prisma ORM으로 교체하는 수준입니다.
+
+  2) 실시간 알림:
+     현재는 새로고침해야 변경사항을 볼 수 있는데,
+     WebSocket이나 Supabase Realtime을 활용하면
+     일정이 배정되었을 때 팀원에게 즉시 알림을 줄 수 있습니다.
+
+  3) 대시보드 고도화:
+     월별/팀별 매출 차트, 정산 현황 시각화 등
+     Chart.js나 Recharts로 데이터 시각화를 추가할 계획입니다.
+
+
+================================================================================
+  12. 면접 핵심 키워드 정리 (빠르게 복습용)
+================================================================================
+
+  [아키텍처]
+  - Next.js App Router : 프론트 + 백엔드 통합
+  - API Route          : 서버사이드 로직 처리 계층
+  - server-only        : 서버 전용 모듈 보호
+  - Provider 패턴      : AuthProvider > ScheduleProvider (순서 중요)
+
+  [인증/보안]
+  - bcrypt             : 단방향 해시 + salt, cost factor
+  - 세션 토큰          : crypto.randomBytes(32), 256비트
+  - 타이밍 공격 방어   : 더미 해시로 응답 시간 균일화
+  - 계정 열거 방지     : 통일된 에러 메시지
+  - IDOR 방지          : 소유자 검증 후 접근 허용
+  - Mass Assignment    : ALLOWED_FIELDS / ADMIN_ONLY_FIELDS 화이트리스트
+  - RLS                : Row Level Security, service_role만 우회
+
+  [DB]
+  - UUID               : 순차 추측 방지
+  - CHECK 제약         : DB 레벨 데이터 무결성
+  - snake_case         : PostgreSQL 컨벤션, API에서 camelCase 변환
+
+  [프론트엔드]
+  - React Context      : 전역 상태 관리 (외부 라이브러리 없이)
+  - useCallback        : 함수 참조 안정화, 불필요한 리렌더링 방지
+  - sessionStorage     : 세션 토큰 저장 (탭 닫으면 자동 삭제)
+  - @layer components  : Tailwind 유틸리티와 커스텀 CSS 우선순위 제어
+
+  [환경/배포]
+  - NEXT_PUBLIC_       : 클라이언트 노출 가능 환경변수 접두어
+  - .env.local         : gitignore 대상, 민감 정보 로컬 저장
+  - Vercel             : GitHub push --> 자동 배포
+  - service_role key   : NEXT_PUBLIC_ 없이 서버 전용으로 관리

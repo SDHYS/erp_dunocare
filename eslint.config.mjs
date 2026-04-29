@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Node.js 시드 스크립트 (CommonJS 사용, 앱 코드와 분리)
+    "scripts/**",
   ]),
 ]);
 

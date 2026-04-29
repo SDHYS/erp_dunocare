@@ -17,29 +17,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore session on mount
+  // 세션 복원 — HttpOnly 쿠키는 fetch 가 자동 전송
   useEffect(() => {
-    const token = sessionStorage.getItem('session_token');
-    if (!token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- sessionStorage 접근은 useEffect 필수
-      setIsLoading(false);
-      return;
-    }
-    fetch('/api/auth/session', {
-      headers: { 'x-session-token': token },
-    })
+    fetch('/api/auth/session', { credentials: 'same-origin' })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data?.user) {
-          setUser(data.user);
-        } else {
-          sessionStorage.removeItem('session_token');
-        }
+        if (data?.user) setUser(data.user);
       })
-      .catch(() => {
-        sessionStorage.removeItem('session_token');
-      })
+      .catch(() => {})
       .finally(() => setIsLoading(false));
+
+    // 구 클라이언트 호환: sessionStorage 잔재 정리
+    try { sessionStorage.removeItem('session_token'); } catch {}
   }, []);
 
   const login = useCallback(async (loginId: string, password: string): Promise<string | null> => {
@@ -47,11 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ loginId, password }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok) return data?.error || '로그인에 실패했습니다.';
-      sessionStorage.setItem('session_token', data.token);
+      // 토큰은 Set-Cookie 로 자동 저장됨 — JS 에서 직접 다루지 않음
+      // 수동 로그인 성공 시 자동로그인 차단 플래그 해제
+      try { sessionStorage.removeItem('skip_dev_autologin'); } catch {}
       setUser(data.user);
       return null;
     } catch {
@@ -60,14 +52,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    const token = sessionStorage.getItem('session_token');
-    if (token) {
+    try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        headers: { 'x-session-token': token },
-      }).catch(() => {});
-    }
-    sessionStorage.removeItem('session_token');
+        credentials: 'same-origin',
+      });
+    } catch {}
+    // dev 자동로그인 차단 플래그 (탭 닫기 전까지 유지) — 카카오 테스트 등 시 유용
+    try { sessionStorage.setItem('skip_dev_autologin', '1'); } catch {}
     setUser(null);
   }, []);
 
