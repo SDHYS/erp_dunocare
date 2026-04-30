@@ -227,36 +227,25 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             const team = s.assignee || '미정';
             return (
               <div
-                className="w-full block px-1 py-0.5 lg:px-1.5 lg:py-1 rounded leading-tight box-border overflow-hidden lg:h-auto"
+                className="w-full block h-[34px] lg:h-[36px] px-1.5 pt-0.5 pb-1 rounded leading-tight tracking-tight box-border overflow-hidden"
                 style={{ backgroundColor: SLOT_BG[slot] }}
                 title={`${time ? time + ' ' : ''}${store}${team ? ' · ' + team : ''} · ${s.request}`}
               >
-                {/* 모바일: 시간만 (한 일정 = 한 줄) */}
-                <div className="lg:hidden text-[11px] font-bold text-gray-900 tabular-nums flex items-center gap-1">
+                {/* 1줄: [시간 뱃지] 팀 (PC만) / 모바일은 매장명 우선 */}
+                <div className="text-[10px] lg:text-[11px] flex items-center gap-1.5">
                   {time && (
                     <span
-                      className="inline-block w-1.5 h-1.5 rounded-full shrink-0"
+                      className="tabular-nums font-bold text-white shrink-0 px-1.5 rounded"
                       style={{ backgroundColor: SLOT_ACCENT[slot] }}
-                    />
+                    >
+                      {time}
+                    </span>
                   )}
-                  {time || '--:--'}
+                  <span className="hidden lg:inline flex-1 min-w-0 overflow-hidden whitespace-nowrap font-bold text-gray-900" style={{ textOverflow: 'clip' }}>{team}</span>
                 </div>
-                {/* 데스크톱: 시간 뱃지 + 팀 + 매장 (2줄) */}
-                <div className="hidden lg:block">
-                  <div className="text-[11px] flex items-center gap-1.5">
-                    {time && (
-                      <span
-                        className="tabular-nums font-bold text-white shrink-0 px-1.5 rounded"
-                        style={{ backgroundColor: SLOT_ACCENT[slot] }}
-                      >
-                        {time}
-                      </span>
-                    )}
-                    <span className="flex-1 min-w-0 overflow-hidden whitespace-nowrap font-bold text-gray-900" style={{ textOverflow: 'clip' }}>{team}</span>
-                  </div>
-                  <div className="text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap" style={{ textOverflow: 'clip' }}>
-                    {store}
-                  </div>
+                {/* 2줄: 매장 */}
+                <div className="text-[11px] lg:text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap" style={{ textOverflow: 'clip' }}>
+                  {store}
                 </div>
               </div>
             );

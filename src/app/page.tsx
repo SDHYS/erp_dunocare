@@ -343,10 +343,10 @@ function getSlotLabel(time: string): { label: string; bg: string; color: string 
   if (!time) return null;
   const hour = parseInt(time.split(':')[0], 10);
   if (isNaN(hour)) return null;
-  // 달력 블록(오전 파랑 / 오후 빨강)과 통일
+  // 달력 블록(오전 보라 / 오후 주황)과 통일
   return hour < 12
-    ? { label: '오전', bg: '#dbeafe', color: '#1e40af' } // blue-100 / blue-800
-    : { label: '오후', bg: '#fee2e2', color: '#991b1b' }; // red-100 / red-800
+    ? { label: '오전', bg: '#a78bfa', color: '#ffffff' } // violet-400 + white text
+    : { label: '오후', bg: '#fb923c', color: '#ffffff' }; // orange-400 + white text
 }
 
 function StatusDropdown({ value, onChange, disabled }: {
