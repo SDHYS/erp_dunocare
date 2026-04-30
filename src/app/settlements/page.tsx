@@ -295,22 +295,25 @@ export default function SettlementsPage() {
       </div>
 
       {/* 검색/상태 필터 */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+      <div className="flex flex-col gap-3">
+        {/* Row 1: 검색 */}
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="매장/담당 검색"
-          className="input flex-1"
+          className="input"
         />
-        <div className="flex gap-2">
+
+        {/* Row 2: 정산 상태 필터 + 보기 모드 (전체/팀별) — 같은 레벨 */}
+        <div className="flex flex-wrap items-center gap-2">
           {SETTLEMENT_FILTER_OPTIONS.map(opt => {
             const active = filter === opt.value;
             return (
               <button
                 key={opt.value}
                 onClick={() => setFilter(opt.value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] ${
                   active ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -321,18 +324,22 @@ export default function SettlementsPage() {
               </button>
             );
           })}
+          <div className="ml-auto">
+            <PortalDropdown
+              value={viewMode}
+              onChange={(v) => setViewMode(v as 'list' | 'grouped')}
+              options={VIEW_MODE_OPTIONS}
+              className="bg-white border border-gray-300 hover:border-gray-400"
+            />
+          </div>
         </div>
-        <div className="flex gap-2">
-          <PortalDropdown
-            value={viewMode}
-            onChange={(v) => setViewMode(v as 'list' | 'grouped')}
-            options={VIEW_MODE_OPTIONS}
-            className="bg-white border border-gray-300 hover:border-gray-400"
-          />
+
+        {/* Row 3: 내보내기 */}
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleExportXlsx}
             disabled={filtered.length === 0}
-            className="px-3 py-2.5 lg:py-2 bg-green-600 text-white rounded-lg text-sm lg:text-xs font-medium hover:bg-green-700 disabled:opacity-40 whitespace-nowrap min-h-[44px] lg:min-h-0"
+            className="flex-1 sm:flex-initial px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-40 whitespace-nowrap min-h-[44px]"
             title="기존 엑셀 포맷으로 내보내기 (팀별 시트 + 전체 시트)"
           >
             엑셀(.xlsx)
@@ -340,7 +347,7 @@ export default function SettlementsPage() {
           <button
             onClick={handleExportCSV}
             disabled={filtered.length === 0}
-            className="px-3 py-2.5 lg:py-2 bg-gray-100 text-gray-700 rounded-lg text-sm lg:text-xs font-medium hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap min-h-[44px] lg:min-h-0"
+            className="flex-1 sm:flex-initial px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap min-h-[44px]"
           >
             CSV
           </button>

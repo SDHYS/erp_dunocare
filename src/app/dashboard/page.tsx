@@ -152,7 +152,7 @@ export default function DashboardPage() {
     <div className="space-y-5 max-w-7xl mx-auto">
       {/* === 0. 기간 필터 — 탭 + 화살표 네비게이션 === */}
       <div className="bg-white rounded-2xl border-2 border-gray-200 p-3 space-y-2">
-        {/* Row 1: 모드 탭 + 사용자 지정 토글 */}
+        {/* Row 1: 모드 탭 (일/주/월/사용자 지정) — 통일된 스타일 */}
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-0.5 bg-gray-100 rounded-lg p-0.5">
             {(['day', 'week', 'month'] as PeriodMode[]).map(m => (
@@ -169,18 +169,18 @@ export default function DashboardPage() {
                 {m === 'day' ? '일' : m === 'week' ? '주' : '월'}
               </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setCustomMode(c => !c)}
+              className={`px-4 py-1.5 text-sm font-semibold rounded-md transition-colors ${
+                customMode
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              사용자 지정
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setCustomMode(c => !c)}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              customMode
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
-          >
-            사용자 지정
-          </button>
         </div>
 
         {/* Row 2: ← [현재 기간] →  [오늘] */}
