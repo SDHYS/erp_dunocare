@@ -139,11 +139,6 @@ export default function AdminUsersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">관리자 계정</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {isDev
-              ? '개발자 권한 — 모든 관리자 추가/수정/삭제 가능'
-              : '슈퍼관리자 권한 — 일반 관리자만 추가/수정/삭제 가능 (다른 슈퍼관리자는 개발자만 관리)'}
-          </p>
         </div>
         <button
           type="button"

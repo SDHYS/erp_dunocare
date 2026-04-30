@@ -4,16 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useAuth } from '@/store/authStore';
 
-// 개발용 자동 로그인 — 서버 사이드에서만 활성화 (NEXT_PUBLIC_ 사용 안 함)
-// 클라이언트 입장에서는 ID 만 표시하고 비밀번호는 서버 엔드포인트로 전달
-const DEV_AUTO_LOGIN_HINT = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_ID || '';
+// 데모/개발용 로그인 폼 prefill (NEXT_PUBLIC_ — 클라이언트 번들에 박힘)
+// ⚠️ 운영 launch 시 PW 는 반드시 비우거나 강한 비밀번호로 교체
+const DEMO_HINT_ID = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_ID || '';
+const DEMO_HINT_PW = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_PW || '';
 const KAKAO_ENABLED = !!process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [mode, setMode] = useState<'kakao' | 'admin'>('kakao');
-  const [id, setId] = useState(DEV_AUTO_LOGIN_HINT);
-  const [password, setPassword] = useState('');
+  const [id, setId] = useState(DEMO_HINT_ID);
+  const [password, setPassword] = useState(DEMO_HINT_PW);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
