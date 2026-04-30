@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useAuth } from '@/store/authStore';
 import Calendar from '@/components/schedules/Calendar';
+import ScheduleAgenda from '@/components/schedules/ScheduleAgenda';
 import ScheduleForm from '@/components/schedules/ScheduleForm';
 import StoreRequestForm from '@/components/schedules/StoreRequestForm';
 import type { Schedule, ProgressStatus } from '@/types';
@@ -18,6 +19,7 @@ export default function HomePage() {
   const isStore = user?.role === 'store';
   const [showForm, setShowForm] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   const detailPanelRef = useRef<HTMLDivElement>(null);
 
   // 날짜 선택 시 상세 패널로 스크롤 이동
@@ -104,15 +106,62 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 메인 캘린더 — 헤더 좌측: 오늘 N건 / 중앙: 년월 / 우측: 새 일정 등록 */}
-      <Calendar
-        schedules={schedules}
-        selectedDate={selectedDate}
-        onDateSelect={(date) => setSelectedDate(date || null)}
-        onCreateClick={isAdmin ? () => { setEditingSchedule(null); setShowForm(true); } : undefined}
-        createLabel="새 일정 등록"
-        todayCount={todayCount}
-      />
+      {/* 보기 모드 토글 — 달력 / 목록 */}
+      <div className="flex items-center justify-end">
+        <div className="inline-flex bg-gray-100 rounded-lg p-1">
+          <button
+            type="button"
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors min-h-[40px] ${
+              viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}
+            aria-pressed={viewMode === 'calendar'}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            달력
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors min-h-[40px] ${
+              viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            }`}
+            aria-pressed={viewMode === 'list'}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            목록
+          </button>
+        </div>
+      </div>
+
+      {/* 메인 콘텐츠 — 달력 또는 목록 */}
+      {viewMode === 'calendar' ? (
+        <Calendar
+          schedules={schedules}
+          selectedDate={selectedDate}
+          onDateSelect={(date) => setSelectedDate(date || null)}
+          onCreateClick={isAdmin ? () => { setEditingSchedule(null); setShowForm(true); } : undefined}
+          createLabel="새 일정 등록"
+          todayCount={todayCount}
+        />
+      ) : (
+        <ScheduleAgenda
+          schedules={schedules}
+          selectedDate={selectedDate}
+          onDateSelect={(date) => setSelectedDate(date || null)}
+          onCreateClick={(date) => {
+            if (date) setSelectedDate(date);
+            setEditingSchedule(null);
+            setShowForm(true);
+          }}
+          isAdmin={isAdmin}
+          isStore={isStore}
+        />
+      )}
 
       {/* 선택한 날짜의 일정 목록 (큰 카드) */}
       {selectedDate && (
