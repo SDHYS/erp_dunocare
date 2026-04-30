@@ -77,8 +77,14 @@ export default function SettlementsPage() {
   };
 
   // 기간 범위 + 검색어로 1차 필터링 (정산상태 필터 제외)
+  // 정산관리는 "담당이 배정된 + 취소되지 않은" 일정만 — 정산 대상이 명확한 케이스
   const periodScoped = useMemo(() => {
-    let result = schedules.filter(s => s.date >= period.from && s.date <= period.to);
+    let result = schedules.filter(s =>
+      s.date >= period.from
+      && s.date <= period.to
+      && s.assignee?.trim()
+      && s.progressStatus !== '취소'
+    );
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       result = result.filter(s =>
@@ -340,7 +346,7 @@ export default function SettlementsPage() {
                 else if (v === 'csv') handleExportCSV();
               }}
               options={[
-                { value: 'xlsx', label: '엑셀 (.xlsx)' },
+                { value: 'xlsx', label: 'XLSX' },
                 { value: 'csv', label: 'CSV' },
               ]}
               disabled={filtered.length === 0}
