@@ -23,6 +23,8 @@ interface PortalDropdownProps {
   size?: 'sm' | 'md';
   /** 트리거 추가 className (래퍼) */
   className?: string;
+  /** 메뉴 모드: 트리거에 항상 이 라벨 표시 (선택 상태 미반영). 액션 메뉴용. */
+  triggerLabel?: string;
 }
 
 /**
@@ -36,6 +38,7 @@ export default function PortalDropdown({
   disabled = false,
   size = 'md',
   className = '',
+  triggerLabel,
 }: PortalDropdownProps) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ top: number | null; bottom: number | null; right: number; minWidth: number }>({
@@ -120,8 +123,8 @@ export default function PortalDropdown({
         className={`${padding} font-medium rounded-md cursor-pointer disabled:cursor-default disabled:opacity-80 inline-flex items-center justify-between gap-1 hover:bg-gray-100 transition-colors ${triggerStyle} ${className}`}
       >
         <span className="inline-flex items-center">
-          {current?.dot && renderDot(current.dot)}
-          {current?.label ?? value}
+          {!triggerLabel && current?.dot && renderDot(current.dot)}
+          {triggerLabel ?? current?.label ?? value}
         </span>
         {!disabled && (
           <svg

@@ -28,14 +28,6 @@
 :root {
   --background: #f9fafb;
   --foreground: #111827;
-  /* 캘린더 셀 경계 색 — 라이트모드는 진회색, 다크모드는 흰색 */
-  --calendar-accent: #111827;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --calendar-accent: #ffffff;
-  }
 }
 
 body {

@@ -246,13 +246,11 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             );
           };
 
-          // 오늘: 실선 외곽선 (영구 표식)
-          // 선택: 점선 외곽선 (사용자 클릭 — 일시 표식, 우선순위 높음)
-          // 색상은 CSS 변수 — 라이트=진회색, 다크=흰색 (globals.css)
+          // 오늘: 흰색 실선, 선택: 흰색 점선 — 다크 배경에 명확히 보이게
           const borderStyle: React.CSSProperties = isSelected
-            ? { outline: '2px dashed var(--calendar-accent)', outlineOffset: '-2px' }
+            ? { outline: '3px dashed #ffffff', outlineOffset: '-3px' }
             : isToday
-            ? { outline: '2px solid var(--calendar-accent)', outlineOffset: '-2px' }
+            ? { outline: '3px solid #ffffff', outlineOffset: '-3px' }
             : {};
 
           const cellBg = '';

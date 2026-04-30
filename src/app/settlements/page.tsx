@@ -305,7 +305,7 @@ export default function SettlementsPage() {
           className="input"
         />
 
-        {/* Row 2: 정산 상태 필터 + 보기 모드 (전체/팀별) — 같은 레벨 */}
+        {/* Row 2: 정산 상태 필터 + 보기 모드(전체/팀별) + 다운로드 — 모두 같은 높이 */}
         <div className="flex flex-wrap items-center gap-2">
           {SETTLEMENT_FILTER_OPTIONS.map(opt => {
             const active = filter === opt.value;
@@ -313,7 +313,7 @@ export default function SettlementsPage() {
               <button
                 key={opt.value}
                 onClick={() => setFilter(opt.value)}
-                className={`inline-flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors min-h-[44px] ${
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                   active ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -324,33 +324,29 @@ export default function SettlementsPage() {
               </button>
             );
           })}
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             <PortalDropdown
               value={viewMode}
               onChange={(v) => setViewMode(v as 'list' | 'grouped')}
               options={VIEW_MODE_OPTIONS}
               className="bg-white border border-gray-300 hover:border-gray-400"
             />
+            <PortalDropdown
+              value=""
+              triggerLabel="⬇ 다운"
+              onChange={(v) => {
+                if (filtered.length === 0) return;
+                if (v === 'xlsx') handleExportXlsx();
+                else if (v === 'csv') handleExportCSV();
+              }}
+              options={[
+                { value: 'xlsx', label: '엑셀 (.xlsx)' },
+                { value: 'csv', label: 'CSV' },
+              ]}
+              disabled={filtered.length === 0}
+              className="bg-white border border-gray-300 hover:border-gray-400"
+            />
           </div>
-        </div>
-
-        {/* Row 3: 내보내기 */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={handleExportXlsx}
-            disabled={filtered.length === 0}
-            className="flex-1 sm:flex-initial px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-40 whitespace-nowrap min-h-[44px]"
-            title="기존 엑셀 포맷으로 내보내기 (팀별 시트 + 전체 시트)"
-          >
-            엑셀(.xlsx)
-          </button>
-          <button
-            onClick={handleExportCSV}
-            disabled={filtered.length === 0}
-            className="flex-1 sm:flex-initial px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-40 whitespace-nowrap min-h-[44px]"
-          >
-            CSV
-          </button>
         </div>
       </div>
 
