@@ -186,25 +186,35 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             const team = s.assignee || '미정';
             return (
               <div
-                className="w-full block h-[34px] lg:h-[36px] px-1.5 pt-0.5 pb-1 rounded leading-tight tracking-tight box-border overflow-hidden"
+                className="w-full block h-[20px] lg:h-[36px] px-1 lg:px-1.5 py-0.5 lg:pt-0.5 lg:pb-1 rounded leading-tight tracking-tight box-border overflow-hidden flex items-center lg:block"
                 style={{ backgroundColor: SLOT_BG[slot] }}
                 title={`${time ? time + ' ' : ''}${store}${team ? ' · ' + team : ''} · ${s.request}`}
               >
-                {/* 1줄: [시간 뱃지] 팀 (PC만) / 모바일은 매장명 우선 */}
-                <div className="text-[10px] lg:text-[11px] flex items-center gap-1.5">
-                  {time && (
-                    <span
-                      className="tabular-nums font-bold text-white shrink-0 px-1.5 rounded"
-                      style={{ backgroundColor: SLOT_ACCENT[slot] }}
-                    >
-                      {time}
-                    </span>
-                  )}
-                  <span className="hidden lg:inline flex-1 min-w-0 overflow-hidden whitespace-nowrap font-bold text-gray-900" style={{ textOverflow: 'clip' }}>{team}</span>
-                </div>
-                {/* 2줄: 매장 */}
-                <div className="text-[11px] lg:text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap" style={{ textOverflow: 'clip' }}>
-                  {store}
+                {/* 모바일: 시간 뱃지만 (한 줄) */}
+                {time && (
+                  <span
+                    className="lg:hidden tabular-nums font-bold text-white shrink-0 px-1.5 rounded text-[10px]"
+                    style={{ backgroundColor: SLOT_ACCENT[slot] }}
+                  >
+                    {time}
+                  </span>
+                )}
+                {/* PC: 1줄 [시간 뱃지][팀] + 2줄 매장 (원본 그대로) */}
+                <div className="hidden lg:block">
+                  <div className="text-[11px] flex items-center gap-1.5">
+                    {time && (
+                      <span
+                        className="tabular-nums font-bold text-white shrink-0 px-1.5 rounded"
+                        style={{ backgroundColor: SLOT_ACCENT[slot] }}
+                      >
+                        {time}
+                      </span>
+                    )}
+                    <span className="flex-1 min-w-0 overflow-hidden whitespace-nowrap font-bold text-gray-900" style={{ textOverflow: 'clip' }}>{team}</span>
+                  </div>
+                  <div className="text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap" style={{ textOverflow: 'clip' }}>
+                    {store}
+                  </div>
                 </div>
               </div>
             );
@@ -225,7 +235,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               key={dateStr}
               onClick={() => onDateSelect(isSelected ? '' : dateStr)}
               style={borderStyle}
-              className={`h-[144px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg}`}
+              className={`h-[88px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg}`}
             >
               {/* 상단 헤더 — 오늘이면 라임 배경(브랜드 컬러), 평소엔 연회색 */}
               <div className={`px-1 py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-[#84cc16]' : 'bg-gray-100'}`}>

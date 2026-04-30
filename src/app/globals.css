@@ -28,6 +28,8 @@
 :root {
   --background: #f9fafb;
   --foreground: #111827;
+  /* Chrome 강제 다크모드 색 반전 방지 — 보라/주황 색이 의도와 다르게 표시되는 문제 */
+  color-scheme: only light;
 }
 
 body {
