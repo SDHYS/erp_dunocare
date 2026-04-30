@@ -115,23 +115,17 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
       <div className="flex flex-col lg:grid lg:grid-cols-3 items-stretch lg:items-center px-4 lg:px-5 py-3 lg:py-4 border-b-2 border-gray-100 gap-3">
         {/* 좌측: 오전/오후 범례 + 오늘 일정 N건 — items-stretch 로 같은 높이 유지 */}
         <div className="lg:justify-self-start flex items-stretch gap-2">
-          {/* 오전/오후 범례 — 오늘 일정 카드와 같은 모양/높이 (위/아래 stack 합 = 오늘 일정 높이) */}
-          <div className="flex flex-col gap-1">
+          {/* 오전/오후 범례 — 오늘 일정 카드와 동일한 rounded-xl 박스 안에 분할 */}
+          <div className="flex flex-col rounded-xl border border-gray-200 overflow-hidden min-w-[48px]">
             <div
-              className="flex-1 flex items-center justify-center px-3 rounded-xl text-xs font-semibold text-gray-800 min-w-[48px]"
-              style={{
-                backgroundColor: SLOT_BG.morning,
-                border: `1px solid ${SLOT_BORDER.morning}`,
-              }}
+              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-semibold text-gray-800"
+              style={{ backgroundColor: SLOT_BG.morning }}
             >
               오전
             </div>
             <div
-              className="flex-1 flex items-center justify-center px-3 rounded-xl text-xs font-semibold text-gray-800 min-w-[48px]"
-              style={{
-                backgroundColor: SLOT_BG.afternoon,
-                border: `1px solid ${SLOT_BORDER.afternoon}`,
-              }}
+              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-semibold text-gray-800 border-t border-gray-200"
+              style={{ backgroundColor: SLOT_BG.afternoon }}
             >
               오후
             </div>
