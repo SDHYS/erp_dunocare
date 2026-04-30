@@ -106,34 +106,36 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 보기 모드 토글 — 달력 / 목록 */}
+      {/* 보기 모드 토글 — 아이콘만, 컴팩트 */}
       <div className="flex items-center justify-end">
-        <div className="inline-flex bg-gray-100 rounded-lg p-1">
+        <div className="inline-flex bg-gray-100 rounded-lg p-0.5">
           <button
             type="button"
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors min-h-[40px] ${
-              viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
             }`}
             aria-pressed={viewMode === 'calendar'}
+            aria-label="달력 보기"
+            title="달력 보기"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            달력
           </button>
           <button
             type="button"
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold transition-colors min-h-[40px] ${
-              viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
+            className={`p-1.5 rounded-md transition-colors ${
+              viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
             }`}
             aria-pressed={viewMode === 'list'}
+            aria-label="목록 보기"
+            title="목록 보기"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
             </svg>
-            목록
           </button>
         </div>
       </div>
