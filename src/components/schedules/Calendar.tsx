@@ -14,24 +14,24 @@ interface CalendarProps {
 
 type TimeSlot = 'morning' | 'afternoon' | 'unset';
 
-// 블록 배경 — 오전(주황) / 오후(보라) — 토(파랑)/일(빨강)/라임(브랜드) 모두 충돌 회피
+// 블록 배경 — 오전(보라) / 오후(주황) — 토(파랑)/일(빨강)/라임(브랜드) 모두 충돌 회피
 const SLOT_BG: Record<TimeSlot, string> = {
-  morning: '#fff7ed',    // orange-50
-  afternoon: '#f5f3ff',  // violet-50
+  morning: '#f5f3ff',    // violet-50
+  afternoon: '#fff7ed',  // orange-50
   unset: '#f9fafb',
 };
 
 // 얇은 테두리 — 블록 구분용
 const SLOT_BORDER: Record<TimeSlot, string> = {
-  morning: '#fdba74',    // orange-300
-  afternoon: '#c4b5fd',  // violet-300
+  morning: '#c4b5fd',    // violet-300
+  afternoon: '#fdba74',  // orange-300
   unset: '#e5e7eb',
 };
 
 // 시간 뱃지 배경 — 블록보다 한 톤 진하게
 const SLOT_ACCENT: Record<TimeSlot, string> = {
-  morning: '#fb923c',    // orange-400
-  afternoon: '#a78bfa',  // violet-400
+  morning: '#a78bfa',    // violet-400
+  afternoon: '#fb923c',  // orange-400
   unset: '#d1d5db',
 };
 
@@ -115,17 +115,17 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
       <div className="flex flex-col lg:grid lg:grid-cols-3 items-stretch lg:items-center px-4 lg:px-5 py-3 lg:py-4 border-b-2 border-gray-100 gap-3">
         {/* 좌측: 오전/오후 범례 + 오늘 일정 N건 — items-stretch 로 같은 높이 유지 */}
         <div className="lg:justify-self-start flex items-stretch gap-2">
-          {/* 오전/오후 범례 — 오늘 일정 카드와 동일한 rounded-xl 박스 안에 분할 */}
-          <div className="flex flex-col rounded-xl border border-gray-200 overflow-hidden min-w-[48px]">
+          {/* 오전/오후 범례 — 시간 뱃지(SLOT_ACCENT)와 동일한 진한 색 + 흰글씨로 가시성 강조 */}
+          <div className="flex flex-col rounded-xl overflow-hidden min-w-[48px]">
             <div
-              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-semibold text-gray-800"
-              style={{ backgroundColor: SLOT_BG.morning }}
+              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-bold text-white"
+              style={{ backgroundColor: SLOT_ACCENT.morning }}
             >
               오전
             </div>
             <div
-              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-semibold text-gray-800 border-t border-gray-200"
-              style={{ backgroundColor: SLOT_BG.afternoon }}
+              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-bold text-white"
+              style={{ backgroundColor: SLOT_ACCENT.afternoon }}
             >
               오후
             </div>
