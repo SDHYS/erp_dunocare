@@ -14,24 +14,24 @@ interface CalendarProps {
 
 type TimeSlot = 'morning' | 'afternoon' | 'unset';
 
-// 블록 배경 — 오전(주황) / 오후(청록) — 토(파랑)/일(빨강) 컬럼과 충돌 회피
+// 블록 배경 — 오전(주황) / 오후(보라) — 토(파랑)/일(빨강)/라임(브랜드) 모두 충돌 회피
 const SLOT_BG: Record<TimeSlot, string> = {
   morning: '#fff7ed',    // orange-50
-  afternoon: '#f0fdfa',  // teal-50
+  afternoon: '#f5f3ff',  // violet-50
   unset: '#f9fafb',
 };
 
 // 얇은 테두리 — 블록 구분용
 const SLOT_BORDER: Record<TimeSlot, string> = {
   morning: '#fdba74',    // orange-300
-  afternoon: '#5eead4',  // teal-300
+  afternoon: '#c4b5fd',  // violet-300
   unset: '#e5e7eb',
 };
 
 // 시간 뱃지 배경 — 블록보다 한 톤 진하게
 const SLOT_ACCENT: Record<TimeSlot, string> = {
   morning: '#fb923c',    // orange-400
-  afternoon: '#2dd4bf',  // teal-400
+  afternoon: '#a78bfa',  // violet-400
   unset: '#d1d5db',
 };
 
