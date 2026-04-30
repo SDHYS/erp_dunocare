@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Schedule } from '@/types';
 
 interface ScheduleAgendaProps {
@@ -102,11 +102,7 @@ export default function ScheduleAgenda({
   }, [schedules, today, rangeMode]);
 
   const todayRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (todayRef.current) {
-      todayRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
-  }, []);
+  // 자동 스크롤 비활성 — 사용자 요청에 따라 목록 처음부터 보이게 둠
 
   const renderDateGroup = (date: string, items: Schedule[], options?: { isToday?: boolean; muted?: boolean }) => {
     const empty = items.length === 0;
