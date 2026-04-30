@@ -263,8 +263,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               style={borderStyle}
               className={`h-[144px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg}`}
             >
-              {/* 상단 헤더 — 오늘이면 검정 배경, 평소엔 연회색 */}
-              <div className={`px-1 py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-gray-900' : 'bg-gray-100'}`}>
+              {/* 상단 헤더 — 오늘이면 라임 배경(브랜드 컬러), 평소엔 연회색 */}
+              <div className={`px-1 py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-[#84cc16]' : 'bg-gray-100'}`}>
                 <span
                   className={`inline-flex items-center justify-center min-w-[22px] h-5 px-1 text-xs lg:text-sm font-bold ${
                     isToday ? 'text-white' : 'text-gray-800'
