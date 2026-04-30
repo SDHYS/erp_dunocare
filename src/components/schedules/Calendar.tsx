@@ -112,29 +112,15 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-      {/* 헤더 — 모바일: 단일 행 컴팩트 / 데스크톱: 3열 grid */}
-      <div className="flex items-center lg:grid lg:grid-cols-3 lg:items-center px-2 lg:px-5 py-2 lg:py-4 border-b border-gray-100 gap-2 lg:gap-3">
-        {/* 좌측: 오전/오후 범례 (모바일에서도 같이) + 오늘 일정 카드(데스크톱만) */}
-        <div className="lg:justify-self-start flex items-stretch gap-2 shrink-0">
-          <div className="flex flex-col rounded-lg lg:rounded-xl overflow-hidden">
-            <div
-              className="flex-1 flex items-center justify-center px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs font-bold text-white"
-              style={{ backgroundColor: SLOT_ACCENT.morning }}
-            >
-              오전
-            </div>
-            <div
-              className="flex-1 flex items-center justify-center px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs font-bold text-white"
-              style={{ backgroundColor: SLOT_ACCENT.afternoon }}
-            >
-              오후
-            </div>
-          </div>
+      {/* 헤더 모바일: [<][년월][>] [토글][+] / 데스크톱은 그대로 */}
+      <div className="flex items-center lg:grid lg:grid-cols-3 lg:items-center px-2 lg:px-5 py-1.5 lg:py-4 border-b border-gray-100 gap-2 lg:gap-3">
+        {/* 좌측: PC 만 (오늘 일정 카드) — 모바일은 빈 공간 X */}
+        <div className="hidden lg:flex lg:justify-self-start items-stretch gap-2 shrink-0">
           {todayCount !== undefined && (
             <button
               type="button"
               onClick={() => onDateSelect(today)}
-              className="hidden lg:block bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left"
+              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left"
               title="오늘 일정 상세 보기"
             >
               <p className="text-xs text-gray-500 font-medium">오늘 일정</p>
@@ -145,9 +131,9 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
           )}
         </div>
 
-        {/* 중앙: [<] 년월 [>] */}
-        <div className="flex items-center justify-center gap-1 lg:gap-3 flex-1 lg:flex-initial">
-          <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg shrink-0" aria-label="이전 달">
+        {/* 중앙: [<] 년월 [>] — 모바일에선 좌측 부터 시작 */}
+        <div className="flex items-center justify-start lg:justify-center gap-1 lg:gap-3 flex-1 lg:flex-initial">
+          <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded shrink-0" aria-label="이전 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -155,7 +141,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
           <h3 className="text-base lg:text-2xl font-bold text-gray-900 whitespace-nowrap">
             {year}년 {month + 1}월
           </h3>
-          <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg shrink-0" aria-label="다음 달">
+          <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded shrink-0" aria-label="다음 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
@@ -169,11 +155,11 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             <>
               <button
                 onClick={onCreateClick}
-                className="lg:hidden p-2 bg-primary text-white rounded-lg hover:bg-primary-hover min-w-[40px] min-h-[40px] flex items-center justify-center"
+                className="lg:hidden h-8 w-8 bg-primary text-white rounded-md hover:bg-primary-hover flex items-center justify-center shrink-0"
                 aria-label={createLabel}
                 title={createLabel}
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
               </button>

@@ -109,11 +109,11 @@ export default function HomePage() {
       {/* 보기 모드 토글 — Calendar/Agenda 헤더 안에 표시 (별도 행 X) */}
       {(() => {
         const toggle = (
-          <div className="inline-flex bg-gray-100 rounded-md p-0.5 shrink-0">
+          <div className="inline-flex h-8 bg-gray-100 rounded-md p-0.5 shrink-0">
             <button
               type="button"
               onClick={() => setViewMode('calendar')}
-              className={`p-1.5 rounded transition-colors ${
+              className={`h-7 w-7 rounded flex items-center justify-center transition-colors ${
                 viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
               }`}
               aria-pressed={viewMode === 'calendar'}
@@ -127,7 +127,7 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded transition-colors ${
+              className={`h-7 w-7 rounded flex items-center justify-center transition-colors ${
                 viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
               }`}
               aria-pressed={viewMode === 'list'}
