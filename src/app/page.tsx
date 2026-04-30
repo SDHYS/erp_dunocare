@@ -106,64 +106,66 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 보기 모드 토글 — 아이콘만, 컴팩트 */}
-      <div className="flex items-center justify-end">
-        <div className="inline-flex bg-gray-100 rounded-lg p-0.5">
-          <button
-            type="button"
-            onClick={() => setViewMode('calendar')}
-            className={`p-1.5 rounded-md transition-colors ${
-              viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
-            }`}
-            aria-pressed={viewMode === 'calendar'}
-            aria-label="달력 보기"
-            title="달력 보기"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded-md transition-colors ${
-              viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
-            }`}
-            aria-pressed={viewMode === 'list'}
-            aria-label="목록 보기"
-            title="목록 보기"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* 메인 콘텐츠 — 달력 또는 목록 */}
-      {viewMode === 'calendar' ? (
-        <Calendar
-          schedules={schedules}
-          selectedDate={selectedDate}
-          onDateSelect={(date) => setSelectedDate(date || null)}
-          onCreateClick={isAdmin ? () => { setEditingSchedule(null); setShowForm(true); } : undefined}
-          createLabel="새 일정 등록"
-          todayCount={todayCount}
-        />
-      ) : (
-        <ScheduleAgenda
-          schedules={schedules}
-          selectedDate={selectedDate}
-          onDateSelect={(date) => setSelectedDate(date || null)}
-          onCreateClick={(date) => {
-            if (date) setSelectedDate(date);
-            setEditingSchedule(null);
-            setShowForm(true);
-          }}
-          isAdmin={isAdmin}
-          isStore={isStore}
-        />
-      )}
+      {/* 보기 모드 토글 — Calendar/Agenda 헤더 안에 표시 (별도 행 X) */}
+      {(() => {
+        const toggle = (
+          <div className="inline-flex bg-gray-100 rounded-md p-0.5 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('calendar')}
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
+              }`}
+              aria-pressed={viewMode === 'calendar'}
+              aria-label="달력 보기"
+              title="달력 보기"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded transition-colors ${
+                viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
+              }`}
+              aria-pressed={viewMode === 'list'}
+              aria-label="목록 보기"
+              title="목록 보기"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+              </svg>
+            </button>
+          </div>
+        );
+        return viewMode === 'calendar' ? (
+          <Calendar
+            schedules={schedules}
+            selectedDate={selectedDate}
+            onDateSelect={(date) => setSelectedDate(date || null)}
+            onCreateClick={isAdmin ? () => { setEditingSchedule(null); setShowForm(true); } : undefined}
+            createLabel="새 일정 등록"
+            todayCount={todayCount}
+            headerExtra={toggle}
+          />
+        ) : (
+          <ScheduleAgenda
+            schedules={schedules}
+            selectedDate={selectedDate}
+            onDateSelect={(date) => setSelectedDate(date || null)}
+            onCreateClick={(date) => {
+              if (date) setSelectedDate(date);
+              setEditingSchedule(null);
+              setShowForm(true);
+            }}
+            isAdmin={isAdmin}
+            isStore={isStore}
+            headerExtra={toggle}
+          />
+        );
+      })()}
 
       {/* 선택한 날짜의 일정 목록 (큰 카드) */}
       {selectedDate && (

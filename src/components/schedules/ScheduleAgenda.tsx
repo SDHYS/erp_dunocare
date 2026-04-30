@@ -10,6 +10,7 @@ interface ScheduleAgendaProps {
   onCreateClick?: (date?: string) => void;
   isAdmin: boolean;
   isStore: boolean;
+  headerExtra?: React.ReactNode;
 }
 
 type RangeMode = 'week' | 'month' | 'quarter';
@@ -61,6 +62,7 @@ export default function ScheduleAgenda({
   onCreateClick,
   isAdmin,
   isStore,
+  headerExtra,
 }: ScheduleAgendaProps) {
   const today = new Date().toISOString().split('T')[0];
   const [rangeMode, setRangeMode] = useState<RangeMode>('month');
@@ -108,79 +110,93 @@ export default function ScheduleAgenda({
 
   const renderDateGroup = (date: string, items: Schedule[], options?: { isToday?: boolean; muted?: boolean }) => {
     const empty = items.length === 0;
-    return (
-      <div
-        key={date}
-        ref={options?.isToday ? todayRef : undefined}
-        className={`rounded-lg border ${options?.isToday ? 'border-[#84cc16]' : 'border-gray-200'} ${options?.muted ? 'opacity-70' : ''} bg-white overflow-hidden`}
-      >
-        {/* 날짜 헤더 — 컴팩트 */}
-        <div className={`flex items-center justify-between px-3 py-1.5 ${options?.isToday ? 'bg-[#84cc16] text-white' : 'bg-gray-50'}`}>
-          <span className={`text-sm font-bold ${options?.isToday ? 'text-white' : 'text-gray-900'}`}>
-            {dateLabel(date, today)}
-          </span>
-          <span className={`text-xs ${options?.isToday ? 'text-white/90' : 'text-gray-500'}`}>
-            {empty ? '없음' : `${items.length}건`}
-          </span>
-        </div>
+    const labelText = dateLabel(date, today);
+    const todayCls = options?.isToday;
+    const mutedCls = options?.muted ? 'opacity-70' : '';
 
-        {empty ? (
-          (isAdmin || isStore) && onCreateClick ? (
+    // 빈 날: 한 줄로 [날짜] [일정 추가]
+    if (empty) {
+      return (
+        <div
+          key={date}
+          ref={todayCls ? todayRef : undefined}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${todayCls ? 'bg-[#84cc16] text-white' : 'bg-gray-50 text-gray-400'} ${mutedCls}`}
+        >
+          <span className={`text-sm font-bold shrink-0 w-16 ${todayCls ? 'text-white' : 'text-gray-700'}`}>
+            {labelText}
+          </span>
+          {(isAdmin || isStore) && onCreateClick ? (
             <button
               type="button"
               onClick={() => onCreateClick(date)}
-              className="w-full px-3 py-2 text-xs text-gray-400 hover:bg-gray-50 hover:text-primary transition-colors flex items-center justify-center gap-1"
+              className={`flex-1 text-left text-xs hover:underline ${todayCls ? 'text-white/90' : 'text-gray-400 hover:text-primary'}`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              일정 추가
+              + 일정 추가
             </button>
-          ) : null
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {items.map(s => {
-              const slot = getTimeSlot(s.maintenanceTime);
-              return (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    onClick={() => onDateSelect(date)}
-                    className="w-full px-3 py-2 hover:bg-gray-50 transition-colors text-left flex items-center gap-2 text-sm"
-                  >
-                    <span className={`inline-block w-2 h-2 rounded-full shrink-0 ${SLOT_DOT[slot]}`} aria-hidden />
-                    <span className="font-bold text-gray-900 tabular-nums shrink-0">
-                      {s.maintenanceTime?.slice(0, 5) || '--:--'}
-                    </span>
-                    <span className="font-medium text-gray-900 truncate min-w-0 flex-1">
-                      {s.storeName}
-                    </span>
-                    {s.assignee && (
-                      <span className="text-xs text-gray-500 shrink-0 max-w-[80px] truncate">
-                        {s.assignee}
-                      </span>
-                    )}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+          ) : (
+            <span className="flex-1 text-xs">없음</span>
+          )}
+        </div>
+      );
+    }
+
+    // 일정 있음: 첫 줄에 [날짜 라벨][첫 일정], 둘째 줄부터는 들여쓰기로 [공백][일정]
+    return (
+      <div
+        key={date}
+        ref={todayCls ? todayRef : undefined}
+        className={`rounded-lg overflow-hidden ${todayCls ? 'ring-2 ring-[#84cc16]' : 'border border-gray-200'} ${mutedCls} bg-white`}
+      >
+        {items.map((s, idx) => {
+          const slot = getTimeSlot(s.maintenanceTime);
+          const isFirst = idx === 0;
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => onDateSelect(date)}
+              className={`w-full px-2 py-1.5 hover:bg-gray-50 transition-colors text-left flex items-center gap-2 text-sm ${
+                idx > 0 ? 'border-t border-gray-100' : ''
+              } ${todayCls && isFirst ? 'bg-[#84cc16]/10' : ''}`}
+            >
+              {/* 첫 줄에만 날짜 라벨, 이후는 같은 폭의 빈 공간 */}
+              <span className={`shrink-0 w-14 text-xs font-bold ${
+                isFirst
+                  ? todayCls ? 'text-[#65a30d]' : 'text-gray-900'
+                  : ''
+              }`}>
+                {isFirst ? labelText : ''}
+              </span>
+              <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${SLOT_DOT[slot]}`} aria-hidden />
+              <span className="font-bold text-gray-900 tabular-nums shrink-0">
+                {s.maintenanceTime?.slice(0, 5) || '--:--'}
+              </span>
+              <span className="font-medium text-gray-900 truncate min-w-0 flex-1">
+                {s.storeName}
+              </span>
+              {s.assignee && (
+                <span className="text-xs text-gray-500 shrink-0 max-w-[60px] truncate">
+                  {s.assignee}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     );
   };
 
   return (
-    <div className="space-y-2">
-      {/* 범위 선택 + 안내 */}
+    <div className="space-y-1.5">
+      {/* 범위 선택 + 토글(headerExtra) — 한 줄 */}
       <div className="flex items-center justify-between gap-2">
-        <div className="inline-flex bg-gray-100 rounded-lg p-0.5">
+        <div className="inline-flex bg-gray-100 rounded-md p-0.5">
           {(['week', 'month', 'quarter'] as RangeMode[]).map(m => (
             <button
               key={m}
               type="button"
               onClick={() => setRangeMode(m)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
+              className={`px-2.5 py-1 text-xs font-semibold rounded transition-colors ${
                 rangeMode === m ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -188,9 +204,12 @@ export default function ScheduleAgenda({
             </button>
           ))}
         </div>
-        <span className="text-xs text-gray-500">
-          앞으로 {grouped.upcomingCount}건
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-gray-500 hidden sm:inline">
+            앞으로 {grouped.upcomingCount}건
+          </span>
+          {headerExtra}
+        </div>
       </div>
 
       {/* 미래 일정 */}
