@@ -112,33 +112,16 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-      {/* 헤더 모바일: [<][년월][>] [토글][+] / 데스크톱은 그대로 */}
-      <div className="flex items-center lg:grid lg:grid-cols-3 lg:items-center px-2 lg:px-5 py-1.5 lg:py-4 border-b border-gray-100 gap-2 lg:gap-3">
-        {/* 좌측: PC 만 (오늘 일정 카드) — 모바일은 빈 공간 X */}
-        <div className="hidden lg:flex lg:justify-self-start items-stretch gap-2 shrink-0">
-          {todayCount !== undefined && (
-            <button
-              type="button"
-              onClick={() => onDateSelect(today)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left"
-              title="오늘 일정 상세 보기"
-            >
-              <p className="text-xs text-gray-500 font-medium">오늘 일정</p>
-              <p className="text-xl font-bold text-gray-900 leading-tight text-right">
-                {todayCount}<span className="text-sm text-gray-400 ml-0.5">건</span>
-              </p>
-            </button>
-          )}
-        </div>
-
-        {/* 중앙: [<] 년월 [>] — 모바일에선 좌측 부터 시작 */}
-        <div className="flex items-center justify-start lg:justify-center gap-1 lg:gap-3 flex-1 lg:flex-initial">
+      {/* 헤더 (PC + 모바일 동일 컴팩트 레이아웃) */}
+      <div className="flex items-center px-2 lg:px-4 py-1.5 lg:py-2 border-b border-gray-100 gap-2">
+        {/* 좌측: [<] 년월 [>] */}
+        <div className="flex items-center justify-start gap-1 lg:gap-2 flex-1">
           <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded shrink-0" aria-label="이전 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h3 className="text-base lg:text-2xl font-bold text-gray-900 whitespace-nowrap">
+          <h3 className="text-base lg:text-xl font-bold text-gray-900 whitespace-nowrap">
             {year}년 {month + 1}월
           </h3>
           <button onClick={nextMonth} className="p-1 hover:bg-gray-100 rounded shrink-0" aria-label="다음 달">
@@ -148,31 +131,21 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
           </button>
         </div>
 
-        {/* 우측: 보기모드 토글(extra) + + 새 일정 등록 */}
-        <div className="lg:justify-self-end shrink-0 flex items-center gap-1">
+        {/* 우측: 토글 + 새 일정 등록 — 동일 높이 */}
+        <div className="shrink-0 flex items-center gap-1">
           {headerExtra}
           {onCreateClick && (
-            <>
-              <button
-                onClick={onCreateClick}
-                className="lg:hidden h-8 w-8 bg-primary text-white rounded-md hover:bg-primary-hover flex items-center justify-center shrink-0"
-                aria-label={createLabel}
-                title={createLabel}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
-              <button
-                onClick={onCreateClick}
-                className="hidden lg:inline-flex btn-primary-lg w-auto"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                {createLabel}
-              </button>
-            </>
+            <button
+              onClick={onCreateClick}
+              className="h-8 px-2.5 bg-primary text-white rounded-md hover:bg-primary-hover flex items-center justify-center gap-1 text-sm font-semibold shrink-0"
+              aria-label={createLabel}
+              title={createLabel}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden sm:inline">{createLabel}</span>
+            </button>
           )}
         </div>
       </div>
@@ -264,8 +237,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                   {cell.day}
                 </span>
                 {overflow > 0 && (
-                  <span className="bg-[#84cc16] text-white text-[10px] lg:text-[11px] font-bold px-1.5 py-0.5 rounded-md shadow-sm leading-tight whitespace-nowrap">
-                    +{overflow}건
+                  <span className="bg-[#84cc16] text-white text-[10px] lg:text-[11px] font-bold px-1 py-0.5 rounded shadow-sm leading-none whitespace-nowrap">
+                    +{overflow}<span className="hidden lg:inline">건</span>
                   </span>
                 )}
               </div>
