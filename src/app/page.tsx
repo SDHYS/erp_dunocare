@@ -79,7 +79,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="space-y-5 w-full">
+    <div className="space-y-2 lg:space-y-5 w-full">
       {/* 점주 전용 안내 배너 */}
       {isStore && (
         <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">

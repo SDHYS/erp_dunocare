@@ -111,20 +111,19 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-      {/* 헤더 — 데스크톱: 3열 grid / 모바일: 세로 쌓기 */}
-      <div className="flex flex-col lg:grid lg:grid-cols-3 items-stretch lg:items-center px-4 lg:px-5 py-3 lg:py-4 border-b-2 border-gray-100 gap-3">
-        {/* 좌측: 오전/오후 범례 + 오늘 일정 N건 — items-stretch 로 같은 높이 유지 */}
-        <div className="lg:justify-self-start flex items-stretch gap-2">
-          {/* 오전/오후 범례 — 시간 뱃지(SLOT_ACCENT)와 동일한 진한 색 + 흰글씨로 가시성 강조 */}
-          <div className="flex flex-col rounded-xl overflow-hidden min-w-[48px]">
+      {/* 헤더 — 모바일: 단일 행 컴팩트 / 데스크톱: 3열 grid */}
+      <div className="flex items-center lg:grid lg:grid-cols-3 lg:items-center px-2 lg:px-5 py-2 lg:py-4 border-b border-gray-100 gap-2 lg:gap-3">
+        {/* 좌측: 오전/오후 범례 (모바일에서도 같이) + 오늘 일정 카드(데스크톱만) */}
+        <div className="lg:justify-self-start flex items-stretch gap-2 shrink-0">
+          <div className="flex flex-col rounded-lg lg:rounded-xl overflow-hidden">
             <div
-              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-bold text-white"
+              className="flex-1 flex items-center justify-center px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs font-bold text-white"
               style={{ backgroundColor: SLOT_ACCENT.morning }}
             >
               오전
             </div>
             <div
-              className="flex-1 flex items-center justify-center px-3 py-1 text-xs font-bold text-white"
+              className="flex-1 flex items-center justify-center px-2 lg:px-3 py-0.5 lg:py-1 text-[10px] lg:text-xs font-bold text-white"
               style={{ backgroundColor: SLOT_ACCENT.afternoon }}
             >
               오후
@@ -134,7 +133,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             <button
               type="button"
               onClick={() => onDateSelect(today)}
-              className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left"
+              className="hidden lg:block bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-100 hover:border-gray-400 transition-colors text-left"
               title="오늘 일정 상세 보기"
             >
               <p className="text-xs text-gray-500 font-medium">오늘 일정</p>
@@ -146,44 +145,56 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
         </div>
 
         {/* 중앙: [<] 년월 [>] */}
-        <div className="flex items-center justify-between lg:justify-center gap-3">
-          <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-lg" aria-label="이전 달">
+        <div className="flex items-center justify-center gap-1 lg:gap-3 flex-1 lg:flex-initial">
+          <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg shrink-0" aria-label="이전 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <h3 className="text-xl lg:text-2xl font-bold text-gray-900 whitespace-nowrap">
+          <h3 className="text-base lg:text-2xl font-bold text-gray-900 whitespace-nowrap">
             {year}년 {month + 1}월
           </h3>
-          <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-lg" aria-label="다음 달">
+          <button onClick={nextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg shrink-0" aria-label="다음 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
 
-        {/* 우측: + 새 일정 등록 (모바일: 전체 폭) */}
-        <div className="lg:justify-self-end">
+        {/* 우측: + 새 일정 등록 (모바일은 아이콘만, 데스크톱은 풀 라벨) */}
+        <div className="lg:justify-self-end shrink-0">
           {onCreateClick && (
-            <button
-              onClick={onCreateClick}
-              className="btn-primary-lg w-full lg:w-auto"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              {createLabel}
-            </button>
+            <>
+              <button
+                onClick={onCreateClick}
+                className="lg:hidden p-2 bg-primary text-white rounded-lg hover:bg-primary-hover min-w-[40px] min-h-[40px] flex items-center justify-center"
+                aria-label={createLabel}
+                title={createLabel}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+              <button
+                onClick={onCreateClick}
+                className="hidden lg:inline-flex btn-primary-lg w-auto"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                {createLabel}
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 border-b-2 border-gray-100">
+      {/* 요일 헤더 — 모바일에서 더 얇게 */}
+      <div className="grid grid-cols-7 border-b border-gray-100">
         {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
           <div
             key={day}
-            className={`py-3 text-center text-sm font-bold text-gray-700 ${
+            className={`py-1 lg:py-3 text-center text-xs lg:text-sm font-bold text-gray-700 ${
               i === 0 ? 'bg-red-50' : i === 6 ? 'bg-blue-50' : 'bg-gray-50'
             }`}
           >
