@@ -246,11 +246,12 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             );
           };
 
-          // 오늘: 흰색 실선, 선택: 흰색 점선 — 다크 배경에 명확히 보이게
+          // 오늘/선택 표시 — 라이트/다크 어느 배경에서도 잘 보이는 브랜드 라임 컬러
+          //   오늘: 실선, 선택: 점선
           const borderStyle: React.CSSProperties = isSelected
-            ? { outline: '3px dashed #ffffff', outlineOffset: '-3px' }
+            ? { outline: '3px dashed #84cc16', outlineOffset: '-3px' }
             : isToday
-            ? { outline: '3px solid #ffffff', outlineOffset: '-3px' }
+            ? { outline: '3px solid #84cc16', outlineOffset: '-3px' }
             : {};
 
           const cellBg = '';
