@@ -58,24 +58,20 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
       >
-        {/* === Header: 타이틀 + 우측 로고 === */}
-        <div className="flex items-center h-20 px-2 border-b border-gray-200 bg-gradient-to-br from-primary-light/40 to-white gap-2">
-          <div className="flex flex-col min-w-0 flex-1 pl-3">
-            <span className="text-sm font-bold text-gray-900 leading-tight whitespace-nowrap">두노케어 스케줄러</span>
-            <span className="mt-0.5 text-[10px] text-gray-400 tracking-wide"></span>
-          </div>
+        {/* === Header: 로고 === */}
+        <div className="flex items-center h-20 px-5 border-b border-gray-200 bg-gradient-to-br from-primary-light/40 to-white">
           <Image
             src="/logo.png"
             alt="DunoCare"
             width={500}
-            height={500}
+            height={100}
             priority
-            className="h-12 w-12 object-contain shrink-0"
-            sizes="48px"
+            className="h-9 w-auto object-contain"
+            sizes="160px"
           />
           <button
             onClick={onClose}
-            className="lg:hidden p-2.5 rounded-lg hover:bg-white/60 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+            className="ml-auto lg:hidden p-2.5 rounded-lg hover:bg-white/60 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="사이드바 닫기"
           >
             <CloseIcon />
