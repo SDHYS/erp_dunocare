@@ -29,7 +29,33 @@ export async function GET(
     if (!user) return unauthorized();
 
     const { id } = await params;
+
+    // M1: 권한 제한
+    //   - admin: 모든 매장 조회 가능
+    //   - team:  본인이 배정된 일정의 매장만 조회 (assignee = team.name 매칭)
+    //   - store: 본인 매장만 조회
     const supabase = getSupabaseAdmin();
+
+    if (user.role === 'store') {
+      if (user.storeId !== id) return forbidden();
+    } else if (user.role === 'team') {
+      if (!user.teamId) return forbidden();
+      // 매장 이름 가져와서 본인 팀이 그 매장에 배정된 적 있는지 확인
+      const { data: t } = await supabase.from('teams').select('name').eq('id', user.teamId).maybeSingle();
+      const teamName = t?.name;
+      if (!teamName) return forbidden();
+      const { data: store } = await supabase.from('stores').select('name').eq('id', id).maybeSingle();
+      if (!store) return Response.json({ error: '매장을 찾을 수 없습니다.' }, { status: 404 });
+      const { data: matched } = await supabase
+        .from('schedules')
+        .select('id')
+        .eq('store_name', store.name)
+        .eq('assignee', teamName)
+        .limit(1);
+      if (!matched || matched.length === 0) return forbidden();
+    }
+    // admin: 통과 (모든 매장 조회 가능)
+
     const { data, error } = await supabase
       .from('store_maintenance_logs')
       .select('*')

@@ -207,7 +207,7 @@ export default function StoresPage() {
                   return (
                     <tr
                       key={store.id}
-                      className={`transition-colors cursor-pointer ${selectedId === store.id ? 'bg-green-50' : 'hover:bg-gray-50'}`}
+                      className={`transition-colors cursor-pointer ${selectedId === store.id ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
                       onClick={() => setSelectedId(selectedId === store.id ? null : store.id)}
                     >
                       <td className="px-4 py-1.5 font-semibold text-gray-900">{store.name}</td>
@@ -216,8 +216,8 @@ export default function StoresPage() {
                       <td className="px-3 py-1.5 text-gray-600">{store.address || '-'}</td>
                       <td className="px-3 py-1.5 text-center">
                         {store.loginId ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                             {store.loginId}
                           </span>
                         ) : (
@@ -266,14 +266,14 @@ export default function StoresPage() {
               return (
                 <div
                   key={store.id}
-                  className={`px-4 py-2.5 cursor-pointer ${selectedId === store.id ? 'bg-green-50' : ''}`}
+                  className={`px-4 py-2.5 cursor-pointer ${selectedId === store.id ? 'bg-blue-50' : ''}`}
                   onClick={() => setSelectedId(selectedId === store.id ? null : store.id)}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-gray-900 truncate">{store.name}</h4>
-                        {store.loginId && <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" title="계정 설정됨" />}
+                        {store.loginId && <span className="w-2 h-2 rounded-full bg-green-400 shrink-0" title="계정 설정됨" />}
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
                         {store.ownerName && <span>{store.ownerName}</span>}
@@ -475,7 +475,7 @@ function StoreDetailPanel({ storeId, store, onClose }: { storeId: string; store:
         )}
 
         {showLogForm && (
-          <form onSubmit={handleAddLog} className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200 space-y-3">
+          <form onSubmit={handleAddLog} className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200 space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <LogField name="date" label="날짜" type="date" defaultValue={new Date().toISOString().split('T')[0]} required />
               <label className="block">
@@ -500,10 +500,10 @@ function StoreDetailPanel({ storeId, store, onClose }: { storeId: string; store:
             </div>
 
             {/* 추가 항목 — 기본 10개 외 자유 입력 */}
-            <div className="pt-2 border-t border-green-300/60">
+            <div className="pt-2 border-t border-blue-300/60">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-semibold text-gray-700">➕ 추가 항목</span>
-                <button type="button" onClick={addLogExtra} className="text-[11px] px-2 py-1 bg-green-500 hover:bg-green-600 text-white rounded font-semibold">+ 항목 추가</button>
+                <button type="button" onClick={addLogExtra} className="text-[11px] px-2 py-1 bg-green-400 hover:bg-blue-600 text-white rounded font-semibold">+ 항목 추가</button>
               </div>
               {logExtraItems.length > 0 && (
                 <div className="space-y-2">
@@ -637,7 +637,7 @@ function StoreFormModal({ editing, isSubmitting, onSubmit, onClose }: {
           </details>
 
           {/* 접기: 장비 정보 */}
-          <details className="rounded-xl border-2 border-gray-200 open:border-green-200 open:bg-green-50/30" {...(hasEquipment ? { open: true } : {})}>
+          <details className="rounded-xl border-2 border-gray-200 open:border-blue-200 open:bg-blue-50/30" {...(hasEquipment ? { open: true } : {})}>
             <summary className="px-4 py-3 cursor-pointer text-sm font-semibold text-gray-700 flex items-center justify-between list-none">
               <span>☕ 장비 정보 (선택, 있는 것만 입력)</span>
               <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -659,13 +659,13 @@ function StoreFormModal({ editing, isSubmitting, onSubmit, onClose }: {
               <StoreField name="etc" label="기타" defaultValue={editing?.etc} />
 
               {/* 추가 장비 — 기본 10개 외 자유 입력 */}
-              <div className="pt-3 border-t border-green-300/60">
+              <div className="pt-3 border-t border-blue-300/60">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-semibold text-gray-700">➕ 추가 장비</span>
                   <button
                     type="button"
                     onClick={addExtra}
-                    className="text-xs px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold"
+                    className="text-xs px-3 py-1.5 bg-green-400 hover:bg-blue-600 text-white rounded-lg font-semibold"
                   >
                     + 장비 추가
                   </button>
@@ -734,8 +734,8 @@ function StoreFormModal({ editing, isSubmitting, onSubmit, onClose }: {
                 <input name="password" type="password" className="input mt-1" placeholder={editing?.hasPassword ? '변경하려면 새 비밀번호 입력' : '8자 이상 권장'} autoComplete="new-password" minLength={4} />
               </label>
               {editing?.hasPassword && (
-                <p className="text-[11px] text-green-700 inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                <p className="text-[11px] text-blue-700 inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                   비밀번호 설정됨
                 </p>
               )}

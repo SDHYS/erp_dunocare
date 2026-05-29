@@ -1,4 +1,4 @@
-// 진행 상태 색상 — 신호등 팔레트(노랑·초록·빨강) + 진하기로 차이
+// 진행 상태 색상 — 노랑·초록·빨강 팔레트 + 진하기로 차이
 // 노랑 = 접수/배정 단계 (대기)
 // 초록 = 진행/완료 (정상 진행)
 // 빨강 = 정지/취소 (중단)
@@ -42,8 +42,8 @@ export function getStatusColor(status: string): string {
   switch (status) {
     case '접수':     return '#fde047';   // yellow-300
     case '배정중':   return '#facc15';   // yellow-400
-    case '진행중':   return '#86efac';   // green-300
-    case '진행완료': return '#4ade80';   // green-400
+    case '진행중':   return '#86efac';   // blue-300
+    case '진행완료': return '#4ade80';   // blue-500
     case '일정연기': return '#fca5a5';   // red-300
     case '취소':     return '#f87171';   // red-400
     default:         return '#9ca3af';

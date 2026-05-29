@@ -507,20 +507,20 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
 
           {/* === 정산 자동계산 프리뷰 === */}
           {form.cost > 0 && form.assignee && (
-            <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm">
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-green-700">정산 자동계산 (담당: {form.assignee})</span>
-                <span className="text-[11px] text-green-500">{settlementPreview.formula}</span>
+                <span className="text-xs font-semibold text-blue-700">정산 자동계산 (담당: {form.assignee})</span>
+                <span className="text-[11px] text-blue-500">{settlementPreview.formula}</span>
               </div>
               <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-gray-600">
                 <span>총작업비: <b className="text-gray-900">{settlementPreview.cost.toLocaleString()}원</b></span>
                 <span>개인부품: <b className="text-gray-900">{settlementPreview.personalParts.toLocaleString()}원</b></span>
                 {settlementPreview.vatDeduction > 0 && <span>부가세 차감: -{settlementPreview.vatDeduction.toLocaleString()}원</span>}
                 {settlementPreview.agencyFee > 0 && <span>대행사 수수료: -{settlementPreview.agencyFee.toLocaleString()}원</span>}
-                {settlementPreview.dunoFee > 0 && <span>두노 수수료: -{settlementPreview.dunoFee.toLocaleString()}원</span>}
+                {settlementPreview.dunoFee > 0 && <span>두노케어 수수료: -{settlementPreview.dunoFee.toLocaleString()}원</span>}
                 {settlementPreview.incomeTax > 0 && <span>소득세(3.3%): -{settlementPreview.incomeTax.toLocaleString()}원</span>}
               </div>
-              <div className="mt-2 pt-2 border-t border-green-200 flex items-baseline justify-between">
+              <div className="mt-2 pt-2 border-t border-blue-200 flex items-baseline justify-between">
                 <span className="text-xs text-gray-600">최종 정산금</span>
                 <span className="text-lg font-bold text-primary">{settlementPreview.finalAmount.toLocaleString()}원</span>
               </div>
@@ -658,7 +658,7 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
                     </label>
                   </div>
                   {teamConfirmed && (
-                    <p className="mt-1 text-xs text-green-500 font-medium">담당팀 확인완료</p>
+                    <p className="mt-1 text-xs text-blue-500 font-medium">담당팀 확인완료</p>
                   )}
                 </>
               ) : (
@@ -682,11 +682,11 @@ export default function ScheduleForm({ schedule, onSubmit, onCancel }: ScheduleF
           })()}
 
           {/* === 작업 결과 (진행완료 시 기록) === */}
-          <div className={`p-3 rounded-lg border-2 ${form.progressStatus === '진행완료' ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200'}`}>
+          <div className={`p-3 rounded-lg border-2 ${form.progressStatus === '진행완료' ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
             <div className="flex items-center gap-2 mb-1.5">
               <span className="text-sm font-semibold text-gray-800">✅ 작업 결과</span>
               {form.progressStatus === '진행완료' && (
-                <span className="text-[11px] px-1.5 py-0.5 bg-green-500 text-white rounded font-semibold">완료 시 필수</span>
+                <span className="text-[11px] px-1.5 py-0.5 bg-green-400 text-white rounded font-semibold">완료 시 필수</span>
               )}
             </div>
             <textarea

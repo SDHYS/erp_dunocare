@@ -1,0 +1,11 @@
+# 포트폴리오 데모 — 검색엔진 인덱싱 차단
+User-agent: *
+Disallow: /
+
+# 봇 명시 차단 (스크래핑/모니터링 도구)
+User-agent: AhrefsBot
+Disallow: /
+User-agent: SemrushBot
+Disallow: /
+User-agent: MJ12bot
+Disallow: /

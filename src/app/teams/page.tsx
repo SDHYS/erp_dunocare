@@ -120,7 +120,7 @@ export default function TeamsPage() {
         </div>
         <div className="bg-white rounded-2xl border-2 border-gray-200 p-5">
           <p className="text-sm text-gray-500 font-medium">계정 설정</p>
-          <p className="text-4xl font-bold text-green-700 mt-1">{accountCount}<span className="text-lg text-gray-400 font-normal ml-2">/ {teams.length}</span></p>
+          <p className="text-4xl font-bold text-blue-700 mt-1">{accountCount}<span className="text-lg text-gray-400 font-normal ml-2">/ {teams.length}</span></p>
         </div>
         <div className="bg-white rounded-2xl border-2 border-gray-200 p-5">
           <p className="text-sm text-gray-500 font-medium">진행중</p>
@@ -183,7 +183,7 @@ export default function TeamsPage() {
                 return (
                   <tr
                     key={team.id}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedTeam === team.id ? 'bg-green-50' : ''}`}
+                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedTeam === team.id ? 'bg-blue-50' : ''}`}
                     onClick={() => setSelectedTeam(selectedTeam === team.id ? null : team.id)}
                   >
                     <td className="px-4 py-1.5">
@@ -194,8 +194,8 @@ export default function TeamsPage() {
                     <td className="px-3 py-1.5 text-sm text-gray-700">{team.address || '-'}</td>
                     <td className="px-3 py-1.5 text-center">
                       {team.loginId ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                           {team.loginId}
                         </span>
                       ) : (
@@ -205,13 +205,13 @@ export default function TeamsPage() {
                     <td className="px-3 py-1.5 text-center">
                       <div className="flex items-center justify-center gap-2 text-xs font-medium">
                         {stats.active > 0 && (
-                          <span className="text-green-700">진행 {stats.active}</span>
+                          <span className="text-blue-700">진행 {stats.active}</span>
                         )}
                         {stats.active > 0 && stats.completed > 0 && (
                           <span className="text-gray-300" aria-hidden>·</span>
                         )}
                         {stats.completed > 0 && (
-                          <span className="text-green-800">완료 {stats.completed}</span>
+                          <span className="text-blue-800">완료 {stats.completed}</span>
                         )}
                         {stats.total === 0 && <span className="text-gray-400">-</span>}
                       </div>
@@ -259,7 +259,7 @@ export default function TeamsPage() {
             return (
               <div
                 key={team.id}
-                className={`px-4 py-2.5 ${selectedTeam === team.id ? 'bg-green-50' : ''}`}
+                className={`px-4 py-2.5 ${selectedTeam === team.id ? 'bg-blue-50' : ''}`}
                 onClick={() => setSelectedTeam(selectedTeam === team.id ? null : team.id)}
               >
                 <div className="flex items-center justify-between">
@@ -267,7 +267,7 @@ export default function TeamsPage() {
                     <div className="flex items-center gap-2">
                       <h4 className="font-semibold text-gray-900">{team.name}</h4>
                       {team.loginId ? (
-                        <span className="w-2 h-2 rounded-full bg-green-500" title="계정 설정됨" />
+                        <span className="w-2 h-2 rounded-full bg-green-400" title="계정 설정됨" />
                       ) : (
                         <span className="w-2 h-2 rounded-full bg-gray-300" title="계정 미설정" />
                       )}
@@ -279,9 +279,9 @@ export default function TeamsPage() {
                   </div>
                   <div className="flex items-center gap-3 shrink-0" onClick={e => e.stopPropagation()}>
                     <div className="text-right flex items-center gap-1.5 text-xs font-medium">
-                      {stats.active > 0 && <span className="text-green-700">진행 {stats.active}</span>}
+                      {stats.active > 0 && <span className="text-blue-700">진행 {stats.active}</span>}
                       {stats.active > 0 && stats.completed > 0 && <span className="text-gray-300" aria-hidden>·</span>}
-                      {stats.completed > 0 && <span className="text-green-800">완료 {stats.completed}</span>}
+                      {stats.completed > 0 && <span className="text-blue-800">완료 {stats.completed}</span>}
                     </div>
                     <button type="button" onClick={() => { setEditing(team); setShowForm(true); }} className="p-2.5 hover:bg-gray-100 rounded-lg" aria-label="수정">
                       <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -339,11 +339,11 @@ export default function TeamsPage() {
                       <p className="text-xs text-gray-400">전체</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold text-green-700">{stats.active}</p>
+                      <p className="text-lg font-bold text-blue-700">{stats.active}</p>
                       <p className="text-xs text-gray-400">진행중</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-bold text-green-500">{stats.completed}</p>
+                      <p className="text-lg font-bold text-blue-500">{stats.completed}</p>
                       <p className="text-xs text-gray-400">완료</p>
                     </div>
                   </div>
@@ -473,8 +473,8 @@ export default function TeamsPage() {
                     <input name="password" type="password" className="input mt-1" placeholder={editing?.hasPassword ? '변경하려면 새 비밀번호 입력' : '8자 이상 권장'} autoComplete="new-password" minLength={4} />
                   </label>
                   {editing?.hasPassword && (
-                    <p className="text-[11px] text-green-700 inline-flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                    <p className="text-[11px] text-blue-700 inline-flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
                       비밀번호 설정됨
                     </p>
                   )}
@@ -482,7 +482,7 @@ export default function TeamsPage() {
               </details>
 
               {/* 접기: 정산 규칙 (기본값 적용) */}
-              <details className="rounded-xl border-2 border-gray-200 open:border-green-200 open:bg-green-50/30">
+              <details className="rounded-xl border-2 border-gray-200 open:border-blue-200 open:bg-blue-50/30">
                 <summary className="px-4 py-3 cursor-pointer text-sm font-semibold text-gray-700 flex items-center justify-between list-none">
                   <span>💰 정산 규칙 <span className="text-xs text-gray-500 font-normal ml-1">(기본값 자동 적용됨)</span></span>
                   <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -495,7 +495,7 @@ export default function TeamsPage() {
                     <select name="settlementType" defaultValue={editing?.settlementType || 'simple'} className="input mt-1">
                       <option value="simple">직정산 (두노케어 수수료만 차감)</option>
                       <option value="max_care">대행사 경유 (부가세 + 대행사 + 소득세)</option>
-                      <option value="custom">복합형 (모든 단계 적용 — 부가세→대행사→두노→소득세)</option>
+                      <option value="custom">복합형 (모든 단계 적용 — 부가세→대행사→두노케어→소득세)</option>
                     </select>
                   </label>
                   <div className="grid grid-cols-2 gap-3">

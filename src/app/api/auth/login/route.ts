@@ -20,6 +20,11 @@ function makeJsonResponse(body: unknown, init: ResponseInit & { setCookie?: stri
 export async function POST(request: Request) {
   let identifier: string | null = null;
   try {
+    // M2: CSRF — 커스텀 헤더 요구 (top-level form POST 차단)
+    if (request.headers.get('x-app-request') !== '1') {
+      return makeJsonResponse({ error: 'invalid request' }, { status: 403 });
+    }
+
     const body = await request.json().catch(() => null);
     if (!body) {
       return makeJsonResponse({ error: '잘못된 요청입니다.' }, { status: 400 });

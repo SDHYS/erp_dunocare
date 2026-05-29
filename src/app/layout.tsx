@@ -6,8 +6,8 @@ import AppShell from "@/components/layout/AppShell";
 import { ToastProvider } from "@/components/ui/Toast";
 
 export const metadata: Metadata = {
-  title: "두노케어 스케줄러",
-  description: "두노케어 스케줄러 - 정비/청소 일정 관리 시스템",
+  title: "두노케어 스케줄러 by DunoCare",
+  description: "두노케어 스케줄러 — 정비/청소 일정 관리",
 };
 
 export const viewport: Viewport = {

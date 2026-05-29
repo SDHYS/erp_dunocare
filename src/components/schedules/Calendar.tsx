@@ -112,10 +112,43 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-      {/* 헤더 (PC + 모바일 동일 컴팩트 레이아웃) */}
-      <div className="flex items-center px-2 lg:px-4 py-1.5 lg:py-2 border-b border-gray-100 gap-2">
-        {/* 좌측: [<] 년월 [>] */}
-        <div className="flex items-center justify-start gap-1 lg:gap-2 flex-1">
+      {/* 헤더: 좌(범례) / 중앙절대(년월) / 우(headerExtra + create) */}
+      <div className="relative flex items-center px-2 lg:px-4 py-1 lg:py-2 border-b border-gray-100 gap-2 min-h-[40px]">
+        {/* 좌: 오전/오후 세로 범례 */}
+        <div className="flex flex-col leading-none shrink-0 text-[9px] lg:text-[10px] text-gray-500 gap-0.5 z-10">
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#a78bfa' }} aria-hidden />
+            오전
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} aria-hidden />
+            오후
+          </span>
+        </div>
+
+        {/* spacer (좌-우 사이) */}
+        <div className="flex-1" />
+
+        {/* 우: 새 일정 등록 + 보기 토글 (순서 변경) */}
+        <div className="shrink-0 flex items-center gap-1 z-10">
+          {onCreateClick && (
+            <button
+              onClick={onCreateClick}
+              className="h-7 w-6 lg:w-auto lg:px-2.5 bg-primary text-white rounded-md hover:bg-primary-hover flex items-center justify-center gap-1 text-sm font-semibold shrink-0"
+              aria-label={createLabel}
+              title={createLabel}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden lg:inline">{createLabel}</span>
+            </button>
+          )}
+          {headerExtra}
+        </div>
+
+        {/* 중앙(절대 정렬): [<] 년월 [>] — 헤더 폭의 정중앙에 위치 */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 lg:gap-2 whitespace-nowrap">
           <button onClick={prevMonth} className="p-1 hover:bg-gray-100 rounded shrink-0" aria-label="이전 달">
             <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -130,24 +163,6 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             </svg>
           </button>
         </div>
-
-        {/* 우측: 토글 + 새 일정 등록 — 동일 높이 */}
-        <div className="shrink-0 flex items-center gap-1">
-          {headerExtra}
-          {onCreateClick && (
-            <button
-              onClick={onCreateClick}
-              className="h-8 px-2.5 bg-primary text-white rounded-md hover:bg-primary-hover flex items-center justify-center gap-1 text-sm font-semibold shrink-0"
-              aria-label={createLabel}
-              title={createLabel}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              <span className="hidden sm:inline">{createLabel}</span>
-            </button>
-          )}
-        </div>
       </div>
 
       {/* 요일 헤더 — 모바일에서 더 얇게 */}
@@ -155,8 +170,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
         {['일', '월', '화', '수', '목', '금', '토'].map((day, i) => (
           <div
             key={day}
-            className={`py-1 lg:py-3 text-center text-xs lg:text-sm font-bold text-gray-700 ${
-              i === 0 ? 'bg-red-50' : i === 6 ? 'bg-blue-50' : 'bg-gray-50'
+            className={`py-0.5 lg:py-3 text-center text-[11px] lg:text-sm font-bold text-gray-700 leading-tight ${
+              i === 0 ? 'bg-red-50 text-red-700' : i === 6 ? 'bg-blue-50 text-blue-700' : 'bg-gray-50'
             }`}
           >
             {day}
@@ -167,8 +182,19 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
       {/* 날짜 그리드 */}
       <div className="grid grid-cols-7 divide-x divide-y divide-gray-200 border-t border-gray-200">
         {weeks.flat().map((cell, idx) => {
+          const totalCells = weeks.length * 7;
+          const isLastRow = idx >= totalCells - 7;
+          const isFirstCol = idx % 7 === 0;
+          const isLastCol = idx % 7 === 6;
+          // 부모 wrapper rounded-2xl + overflow-hidden 에 맞춰 좌/우 하단 코너 셀에 매칭 라운딩
+          // (outline/dashed border 가 곡선을 따라가도록)
+          const cornerClass = isLastRow && isFirstCol
+            ? 'rounded-bl-2xl'
+            : isLastRow && isLastCol
+              ? 'rounded-br-2xl'
+              : '';
           if (!cell) {
-            return <div key={`empty-${idx}`} className="h-[144px] lg:h-[150px] bg-gray-50/40" />;
+            return <div key={`empty-${idx}`} className={`h-[64px] lg:h-[150px] bg-gray-50/40 ${cornerClass}`} />;
           }
           const dateStr = formatDate(cell.day);
           const isToday = dateStr === today;
@@ -186,22 +212,22 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             const team = s.assignee || '미정';
             return (
               <div
-                className="w-full block h-[20px] lg:h-[36px] px-1 lg:px-1.5 py-0.5 lg:pt-0.5 lg:pb-1 rounded leading-tight tracking-tight box-border overflow-hidden flex items-center lg:block"
+                className="w-full block h-[14px] lg:h-[36px] px-1.5 py-0 lg:pt-0.5 lg:pb-1 rounded-sm lg:rounded leading-none lg:leading-tight tracking-tight box-border overflow-hidden flex items-center justify-start lg:flex lg:flex-col lg:gap-0.5"
                 style={{ backgroundColor: SLOT_BG[slot] }}
                 title={`${time ? time + ' ' : ''}${store}${team ? ' · ' + team : ''} · ${s.request}`}
               >
-                {/* 모바일: 시간 뱃지만 (한 줄) */}
+                {/* 모바일: 시간만 좌측 정렬 (옅은 배경 + 진한 보라/주황 글씨) */}
                 {time && (
                   <span
-                    className="lg:hidden tabular-nums font-bold text-white shrink-0 px-1.5 rounded text-[10px]"
-                    style={{ backgroundColor: SLOT_ACCENT[slot] }}
+                    className="lg:hidden tabular-nums font-extrabold text-[10px] leading-none"
+                    style={{ color: SLOT_ACCENT[slot] }}
                   >
                     {time}
                   </span>
                 )}
-                {/* PC: 1줄 [시간 뱃지][팀] + 2줄 매장 (원본 그대로) */}
-                <div className="hidden lg:block">
-                  <div className="text-[11px] flex items-center gap-1.5">
+                {/* PC: 상단 [시간 뱃지][팀] / 작은 간격 / 매장 */}
+                <div className="hidden lg:contents">
+                  <div className="text-[11px] flex items-center gap-1.5 w-full">
                     {time && (
                       <span
                         className="tabular-nums font-bold text-white shrink-0 px-1.5 rounded"
@@ -212,7 +238,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                     )}
                     <span className="flex-1 min-w-0 overflow-hidden whitespace-nowrap font-bold text-gray-900" style={{ textOverflow: 'clip' }}>{team}</span>
                   </div>
-                  <div className="text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap" style={{ textOverflow: 'clip' }}>
+                  <div className="text-[12px] font-extrabold text-gray-900 overflow-hidden whitespace-nowrap w-full" style={{ textOverflow: 'clip' }}>
                     {store}
                   </div>
                 </div>
@@ -220,7 +246,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
             );
           };
 
-          // 오늘/선택 표시 — 라이트/다크 어느 배경에서도 잘 보이는 브랜드 라임 컬러
+          // 오늘/선택 표시 — 라이트/다크 어느 배경에서도 잘 보이는 브랜드 네이비 컬러
           //   오늘: 실선, 선택: 점선
           const borderStyle: React.CSSProperties = isSelected
             ? { outline: '3px dashed #84cc16', outlineOffset: '-3px' }
@@ -235,40 +261,40 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               key={dateStr}
               onClick={() => onDateSelect(isSelected ? '' : dateStr)}
               style={borderStyle}
-              className={`h-[88px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg}`}
+              className={`h-[64px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg} ${cornerClass}`}
             >
-              {/* 상단 헤더 — 오늘이면 라임 배경(브랜드 컬러), 평소엔 연회색 */}
-              <div className={`px-1 py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-[#84cc16]' : 'bg-gray-100'}`}>
+              {/* 상단 헤더 — 오늘이면 네이비 배경(브랜드 컬러), 평소엔 연회색. 모바일 컴팩트 */}
+              <div className={`px-1 py-0 lg:py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-[#84cc16]' : 'bg-gray-100'}`}>
                 <span
-                  className={`inline-flex items-center justify-center min-w-[22px] h-5 px-1 text-xs lg:text-sm font-bold ${
+                  className={`inline-flex items-center justify-center min-w-[18px] h-4 lg:h-5 px-0.5 lg:px-1 text-[11px] lg:text-sm font-bold leading-none ${
                     isToday ? 'text-white' : 'text-gray-800'
                   }`}
                 >
                   {cell.day}
                 </span>
                 {overflow > 0 && (
-                  <span className="bg-[#84cc16] text-white text-[10px] lg:text-[11px] font-bold px-1 py-0.5 rounded shadow-sm leading-none whitespace-nowrap">
+                  <span className="bg-[#84cc16] text-white text-[9px] lg:text-[11px] font-bold px-1 py-0 lg:py-0.5 rounded shadow-sm leading-none whitespace-nowrap">
                     +{overflow}<span className="hidden lg:inline">건</span>
                   </span>
                 )}
               </div>
 
-              {/* 일정 리스트 — AM 위 / PM 아래 분리 배치, flex-1 로 셀 행 높이 맞춤 */}
+              {/* 일정 리스트 — 모바일은 헤더 바로 아래 붙임(justify-start), PC는 AM 위/PM 아래 분리 */}
               {(() => {
                 const morningBlocks = visible.filter(s => getTimeSlot(s.maintenanceTime) === 'morning');
                 const afternoonBlocks = visible.filter(s => getTimeSlot(s.maintenanceTime) !== 'morning');
-                const justify = morningBlocks.length && afternoonBlocks.length
-                  ? 'justify-between'
-                  : afternoonBlocks.length ? 'justify-end' : 'justify-start';
+                const lgJustify = morningBlocks.length && afternoonBlocks.length
+                  ? 'lg:justify-between'
+                  : afternoonBlocks.length ? 'lg:justify-end' : 'lg:justify-start';
                 return (
-                  <div className={`flex-1 flex flex-col ${justify} gap-[3px] p-1 overflow-hidden`}>
+                  <div className={`flex-1 flex flex-col justify-start ${lgJustify} gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden`}>
                     {morningBlocks.length > 0 && (
-                      <div className="flex flex-col gap-[3px]">
+                      <div className="flex flex-col gap-[1px] lg:gap-[3px]">
                         {morningBlocks.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
                       </div>
                     )}
                     {afternoonBlocks.length > 0 && (
-                      <div className="flex flex-col gap-[3px]">
+                      <div className="flex flex-col gap-[1px] lg:gap-[3px]">
                         {afternoonBlocks.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
                       </div>
                     )}

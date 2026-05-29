@@ -109,12 +109,12 @@ export default function HomePage() {
       {/* 보기 모드 토글 — Calendar/Agenda 헤더 안에 표시 (별도 행 X) */}
       {(() => {
         const toggle = (
-          <div className="inline-flex h-8 bg-gray-100 rounded-md p-0.5 shrink-0">
+          <div className="inline-flex h-7 bg-white border border-[#84cc16] rounded-md shrink-0 overflow-hidden">
             <button
               type="button"
               onClick={() => setViewMode('calendar')}
-              className={`h-7 w-7 rounded flex items-center justify-center transition-colors ${
-                viewMode === 'calendar' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
+              className={`h-full w-7 flex items-center justify-center transition-colors ${
+                viewMode === 'calendar' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
               }`}
               aria-pressed={viewMode === 'calendar'}
               aria-label="달력 보기"
@@ -127,8 +127,8 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`h-7 w-7 rounded flex items-center justify-center transition-colors ${
-                viewMode === 'list' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-400 hover:text-gray-700'
+              className={`h-full w-7 flex items-center justify-center transition-colors border-l border-[#84cc16]/30 ${
+                viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
               }`}
               aria-pressed={viewMode === 'list'}
               aria-label="목록 보기"
@@ -146,7 +146,7 @@ export default function HomePage() {
             selectedDate={selectedDate}
             onDateSelect={(date) => setSelectedDate(date || null)}
             onCreateClick={isAdmin ? () => { setEditingSchedule(null); setShowForm(true); } : undefined}
-            createLabel="새 일정 등록"
+            createLabel="새 일정"
             todayCount={todayCount}
             headerExtra={toggle}
           />

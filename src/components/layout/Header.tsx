@@ -17,7 +17,7 @@ interface HeaderProps {
 // 모바일에서만 햄버거 메뉴 + 페이지 타이틀 표시 (데스크톱에서는 헤더 숨김)
 export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
-  const title = PAGE_TITLES[pathname] || '두노케어';
+  const title = PAGE_TITLES[pathname] || '두노케어 스케줄러';
   return (
     <header className="h-14 lg:hidden bg-white border-b border-gray-200 flex items-center px-2 gap-2 sticky top-0 z-30">
       <button

@@ -9,8 +9,8 @@ export interface SettlementBreakdown {
   afterVat: number;          // 부가세 차감 후
   agencyFee: number;         // 대행사 수수료 차감액
   afterAgency: number;       // 대행사 차감 후
-  dunoFee: number;           // 두노케어 수수료 차감액
-  afterDuno: number;         // 두노케어 차감 후
+  dunoFee: number;       // 두노케어 수수료 차감액
+  afterDuno: number;     // 플랫폼 차감 후
   technicianBase: number;    // 기사수수료 (소득세 차감 전 기사 몫)
   incomeTax: number;         // 소득세
   finalAmount: number;       // 최종 정산금 (+ 개인부품 - 선지급)
@@ -21,7 +21,7 @@ export interface SettlementBreakdown {
 //
 // 변경(2026-04):
 //   - prepaidAmount(선지급) 차감 지원
-//   - 'custom' 타입 지원 — 부가세→대행사→두노→소득세 모두 적용 (모든 율 설정 가능)
+//   - 'custom' 타입 지원 — 부가세→대행사→플랫폼→소득세 모두 적용 (모든 율 설정 가능)
 //   - technicianBase(기사수수료) 노출
 export function calculateSettlement(
   cost: number,
@@ -51,7 +51,7 @@ export function calculateSettlement(
   let formula = '';
 
   if (type === 'max_care') {
-    // 맥스케어 경유: 부가세 → 대행사 → 소득세 (두노 직접 차감 없음)
+    // 맥스케어 경유: 부가세 → 대행사 → 소득세 (플랫폼 직접 차감 없음)
     vatDeduction = Math.round(base * (vatRate / 100));
     afterVat = base - vatDeduction;
     agencyFee = Math.round(afterVat * (agencyRate / 100));
@@ -60,7 +60,7 @@ export function calculateSettlement(
     incomeTax = Math.round(afterAgency * (taxRate / 100));
     formula = `(총액-부품) × (1-${vatRate}%) × (1-${agencyRate}%) - ${taxRate}% + 부품 - 선지급`;
   } else if (type === 'custom') {
-    // 복합형: 부가세 → 대행사 → 두노 → 소득세 (모든 단계 적용)
+    // 복합형: 부가세 → 대행사 → 플랫폼 → 소득세 (모든 단계 적용)
     vatDeduction = vatRate > 0 ? Math.round(base * (vatRate / 100)) : 0;
     afterVat = base - vatDeduction;
     agencyFee = agencyRate > 0 ? Math.round(afterVat * (agencyRate / 100)) : 0;
@@ -152,7 +152,7 @@ export function scheduleToCSVRow(s: Schedule, team: Team | null): string[] {
     String(s.prepaidAmount || 0),    // 선지급
     String(b.vatDeduction),          // 부가세
     String(b.agencyFee),             // 대행사수수료
-    String(b.dunoFee),               // 두노케어수수료
+    String(b.dunoFee),           // 두노케어수수료
     String(b.technicianBase),        // 기사수수료(세전)
     String(b.incomeTax),             // 소득세(3.3%)
     String(b.finalAmount),           // 정산금

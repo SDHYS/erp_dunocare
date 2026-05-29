@@ -377,11 +377,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-1 lg:grid-rows-2 gap-4">
           <Link href="/stores" className="bg-white rounded-2xl border-2 border-gray-200 p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
             <p className="text-xs text-gray-500">등록 고객</p>
-            <p className="text-xl font-bold text-gray-900">{stores.length}<span className="text-xs text-gray-400 font-normal ml-1">곳</span></p>
+            <p className="text-xl font-bold text-gray-900">{stores.length}</p>
           </Link>
           <Link href="/teams" className="bg-white rounded-2xl border-2 border-gray-200 p-4 hover:bg-gray-50 transition-colors flex items-center justify-between">
-            <p className="text-xs text-gray-500">담당(기사)</p>
-            <p className="text-xl font-bold text-gray-900">{teams.length}<span className="text-xs text-gray-400 font-normal ml-1">명</span></p>
+            <p className="text-xs text-gray-500">등록 팀</p>
+            <p className="text-xl font-bold text-gray-900">{teams.length}</p>
           </Link>
         </div>
       </div>

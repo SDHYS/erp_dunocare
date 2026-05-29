@@ -65,13 +65,8 @@ export async function GET(request: Request) {
   const rows = (query.data || []) as AdminRow[];
   const mapped = rows.map(mapRow);
 
-  // 개발자(dev) tier 는 다른 관리자에게는 항상 숨김. 단, 본인이 dev 일 때는 자기 자신만 노출.
-  const actorIsDev = user!.tier === 'dev';
-  const filtered = mapped.filter(m => {
-    if (m.tier !== 'dev') return true;
-    // dev tier 인 row 는 actor 가 dev 이고 본인일 때만 노출
-    return actorIsDev && m.id === user!.adminId;
-  });
+  // 개발자(dev) tier 는 누구에게도 노출하지 않음 (본인이 dev 일 때도 자기 자신 숨김)
+  const filtered = mapped.filter(m => m.tier !== 'dev');
 
   return Response.json(filtered);
 }
