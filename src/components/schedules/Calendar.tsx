@@ -11,6 +11,7 @@ interface CalendarProps {
   createLabel?: string;          // 버튼 라벨 (기본: "새 일정 등록")
   todayCount?: number;           // 헤더 좌측 "오늘 N건" 표시용
   headerExtra?: React.ReactNode; // 헤더에 끼워넣을 추가 컨트롤 (보기모드 토글 등)
+  density?: 'compact' | 'expanded'; // 셀당 표시 일정 갯수 (3줄 vs 6줄)
 }
 
 type TimeSlot = 'morning' | 'afternoon' | 'unset';
@@ -43,7 +44,15 @@ function getTimeSlot(time: string): TimeSlot {
   return hour < 12 ? 'morning' : 'afternoon';
 }
 
-export default function Calendar({ schedules, selectedDate, onDateSelect, onCreateClick, createLabel = '새 일정 등록', todayCount, headerExtra }: CalendarProps) {
+export default function Calendar({ schedules, selectedDate, onDateSelect, onCreateClick, createLabel = '새 일정 등록', todayCount, headerExtra, density = 'compact' }: CalendarProps) {
+  // 셀 높이/가시 일정 수 — density 에 따라 동적
+  // compact:  3개 + 모바일 64px / PC 150px (현재값 유지)
+  // expanded: 6개 + 모바일 110px / PC 260px (계산: 항목 14/36 × 6 + gap)
+  const MAX_VISIBLE = density === 'expanded' ? 6 : 3;
+  // Tailwind 정적 클래스 매핑 (빌드 시 detect 필요)
+  const CELL_H_CLASS = density === 'expanded'
+    ? 'h-[110px] lg:h-[260px]'
+    : 'h-[64px] lg:h-[150px]';
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -194,14 +203,13 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               ? 'rounded-br-2xl'
               : '';
           if (!cell) {
-            return <div key={`empty-${idx}`} className={`h-[64px] lg:h-[150px] bg-gray-50/40 ${cornerClass}`} />;
+            return <div key={`empty-${idx}`} className={`${CELL_H_CLASS} bg-gray-50/40 ${cornerClass}`} />;
           }
           const dateStr = formatDate(cell.day);
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
           const daySchedules = schedulesByDate[dateStr] || [];
           const total = daySchedules.length;
-          const MAX_VISIBLE = 3;
           const visible = daySchedules.slice(0, MAX_VISIBLE);
           const overflow = total - visible.length;
 
@@ -261,7 +269,7 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               key={dateStr}
               onClick={() => onDateSelect(isSelected ? '' : dateStr)}
               style={borderStyle}
-              className={`h-[64px] lg:h-[150px] text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg} ${cornerClass}`}
+              className={`${CELL_H_CLASS} text-left transition-all hover:bg-gray-100/70 focus:outline-none focus:z-10 flex flex-col overflow-hidden ${cellBg} ${cornerClass}`}
             >
               {/* 상단 헤더 — 오늘이면 네이비 배경(브랜드 컬러), 평소엔 연회색. 모바일 컴팩트 */}
               <div className={`px-1 py-0 lg:py-1 flex items-center justify-between flex-shrink-0 ${isToday ? 'bg-[#84cc16]' : 'bg-gray-100'}`}>

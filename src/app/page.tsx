@@ -20,6 +20,7 @@ export default function HomePage() {
   const [showForm, setShowForm] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [density, setDensity] = useState<'compact' | 'expanded'>('compact');
   const detailPanelRef = useRef<HTMLDivElement>(null);
 
   // 날짜 선택 시 상세 패널로 스크롤 이동
@@ -109,35 +110,50 @@ export default function HomePage() {
       {/* 보기 모드 토글 — Calendar/Agenda 헤더 안에 표시 (별도 행 X) */}
       {(() => {
         const toggle = (
-          <div className="inline-flex h-7 bg-white border border-[#84cc16] rounded-md shrink-0 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode('calendar')}
-              className={`h-full w-7 flex items-center justify-center transition-colors ${
-                viewMode === 'calendar' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-              aria-pressed={viewMode === 'calendar'}
-              aria-label="달력 보기"
-              title="달력 보기"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('list')}
-              className={`h-full w-7 flex items-center justify-center transition-colors border-l border-[#84cc16]/30 ${
-                viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
-              }`}
-              aria-pressed={viewMode === 'list'}
-              aria-label="목록 보기"
-              title="목록 보기"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
-              </svg>
-            </button>
+          <div className="inline-flex items-center gap-1 shrink-0">
+            {/* 캘린더 모드일 때만 노출되는 셀 밀도 토글 (3줄 ↔ 6줄) */}
+            {viewMode === 'calendar' && (
+              <button
+                type="button"
+                onClick={() => setDensity(d => d === 'compact' ? 'expanded' : 'compact')}
+                className="h-7 px-2 bg-white border border-[#84cc16] rounded-md text-[10px] lg:text-xs font-bold text-gray-700 hover:bg-primary-light/40 transition-colors leading-none shrink-0"
+                aria-label={density === 'compact' ? '셀 6줄로 확장' : '셀 3줄로 축소'}
+                title={density === 'compact' ? '셀 6줄로 확장' : '셀 3줄로 축소'}
+              >
+                {density === 'compact' ? '3줄' : '6줄'}
+              </button>
+            )}
+            {/* 캘린더/리스트 모드 토글 */}
+            <div className="inline-flex h-7 bg-white border border-[#84cc16] rounded-md shrink-0 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setViewMode('calendar')}
+                className={`h-full w-7 flex items-center justify-center transition-colors ${
+                  viewMode === 'calendar' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+                aria-pressed={viewMode === 'calendar'}
+                aria-label="달력 보기"
+                title="달력 보기"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`h-full w-7 flex items-center justify-center transition-colors border-l border-[#84cc16]/30 ${
+                  viewMode === 'list' ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-50'
+                }`}
+                aria-pressed={viewMode === 'list'}
+                aria-label="목록 보기"
+                title="목록 보기"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+              </button>
+            </div>
           </div>
         );
         return viewMode === 'calendar' ? (
@@ -149,6 +165,7 @@ export default function HomePage() {
             createLabel="새 일정"
             todayCount={todayCount}
             headerExtra={toggle}
+            density={density}
           />
         ) : (
           <ScheduleAgenda
