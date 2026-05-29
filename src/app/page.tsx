@@ -107,41 +107,51 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* 보기 모드 토글 — 통합형 [3줄 | 6줄 | 리스트] 한 줄 */}
+      {/* 보기 모드 토글 — [📅3 | 📅6 | ☰] 달력 아이콘에 숫자 오버레이 */}
       {(() => {
         const isCal3 = viewMode === 'calendar' && density === 'compact';
         const isCal6 = viewMode === 'calendar' && density === 'expanded';
         const isList = viewMode === 'list';
-        const btnBase = 'h-full flex items-center justify-center transition-colors text-[10px] lg:text-xs font-bold leading-none';
+        const btnBase = 'h-full w-7 flex items-center justify-center transition-colors';
         const activeCls = 'bg-primary text-white';
         const inactiveCls = 'text-gray-500 hover:bg-gray-50';
         const sepCls = 'border-l border-[#84cc16]/30';
+        const calIcon = (num: '3' | '6') => (
+          <span className="relative inline-block w-5 h-5">
+            <svg className="absolute inset-0 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center pt-[3px] text-[8px] font-extrabold leading-none">
+              {num}
+            </span>
+          </span>
+        );
         const toggle = (
           <div className="inline-flex h-7 bg-white border border-[#84cc16] rounded-md shrink-0 overflow-hidden">
             <button
               type="button"
               onClick={() => { setViewMode('calendar'); setDensity('compact'); }}
-              className={`${btnBase} px-2 ${isCal3 ? activeCls : inactiveCls}`}
+              className={`${btnBase} ${isCal3 ? activeCls : inactiveCls}`}
               aria-pressed={isCal3}
               aria-label="달력 (3줄)"
               title="달력 (3줄)"
             >
-              3줄
+              {calIcon('3')}
             </button>
             <button
               type="button"
               onClick={() => { setViewMode('calendar'); setDensity('expanded'); }}
-              className={`${btnBase} px-2 ${sepCls} ${isCal6 ? activeCls : inactiveCls}`}
+              className={`${btnBase} ${sepCls} ${isCal6 ? activeCls : inactiveCls}`}
               aria-pressed={isCal6}
               aria-label="달력 (6줄)"
               title="달력 (6줄)"
             >
-              6줄
+              {calIcon('6')}
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`${btnBase} w-7 ${sepCls} ${isList ? activeCls : inactiveCls}`}
+              className={`${btnBase} ${sepCls} ${isList ? activeCls : inactiveCls}`}
               aria-pressed={isList}
               aria-label="목록 보기"
               title="목록 보기"
