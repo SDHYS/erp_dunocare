@@ -290,8 +290,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — 3줄/6줄 모두 헤더 아래 붙임(justify-start) + 하단 4px 여백 (셀 높이로 보장) */}
-              <div className="flex-1 flex flex-col justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
+              {/* 일정 리스트 — justify-center: 상하 여백 균등 분배 */}
+              <div className="flex-1 flex flex-col justify-center gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
                 {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
               </div>
             </button>
