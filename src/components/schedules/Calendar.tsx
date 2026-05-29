@@ -46,12 +46,15 @@ function getTimeSlot(time: string): TimeSlot {
 
 export default function Calendar({ schedules, selectedDate, onDateSelect, onCreateClick, createLabel = '새 일정 등록', todayCount, headerExtra, density = 'compact' }: CalendarProps) {
   // 셀 높이/가시 일정 수 — density 에 따라 동적
-  // compact:  3개 + 모바일 64px / PC 150px (현재값 유지)
-  // expanded: 6개 + 모바일 110px / PC 260px (계산: 항목 14/36 × 6 + gap)
+  // === compact (3개) ===
+  //   모바일 64px:  header 16 + items 3×14 + gaps 2×1 = 60 (4px 여유)
+  //   PC 150px:    header 28 + p-1 (8) + items 3×36 + gaps 2×3 = 150 (꽉)
+  // === expanded (6개) — 충분한 여유 확보 ===
+  //   모바일 128px: header 16 + items 6×14 + gaps 5×1 = 105 (23px 여유)
+  //   PC 288px:    header 28 + p-1 (8) + items 6×36 + gaps 5×3 = 267 (21px 여유)
   const MAX_VISIBLE = density === 'expanded' ? 6 : 3;
-  // Tailwind 정적 클래스 매핑 (빌드 시 detect 필요)
   const CELL_H_CLASS = density === 'expanded'
-    ? 'h-[110px] lg:h-[260px]'
+    ? 'h-[128px] lg:h-[288px]'
     : 'h-[64px] lg:h-[150px]';
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
