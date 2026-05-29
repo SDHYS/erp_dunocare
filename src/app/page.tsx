@@ -116,16 +116,31 @@ export default function HomePage() {
         const activeCls = 'bg-primary text-white';
         const inactiveCls = 'text-gray-500 hover:bg-gray-50';
         const sepCls = 'border-l border-[#84cc16]/30';
-        const calIcon = (num: '3' | '6') => (
-          <span className="relative inline-block w-5 h-5">
-            <svg className="absolute inset-0 w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        // 캘린더 모양 + 안에 가로줄 개수로 행 밀도 표현 (3줄 vs 6줄)
+        const calRowsIcon = (rows: 3 | 6) => {
+          // 내부 영역: y=8 ~ y=20 (12 단위) — rows 개수만큼 균등 분할
+          const top = 8, bottom = 20, w = 20, x1 = 2.5, x2 = 17.5;
+          const step = (bottom - top) / rows;
+          const lines = [];
+          // rows-1 개의 분리선
+          for (let i = 1; i < rows; i++) {
+            const y = top + step * i;
+            lines.push(<line key={i} x1={x1} y1={y} x2={x2} y2={y} />);
+          }
+          return (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 20 20" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+              {/* 캘린더 outline */}
+              <rect x="2" y="4" width={16} height={14} rx="1.5" />
+              {/* 헤더 분리선 */}
+              <line x1="2" y1="8" x2="18" y2="8" />
+              {/* 헤더 위 작은 핀 (날짜 행) */}
+              <line x1="6.5" y1="3" x2="6.5" y2="5.5" />
+              <line x1="13.5" y1="3" x2="13.5" y2="5.5" />
+              {/* 본문 행 분리선 (개수가 밀도 표현) */}
+              {lines}
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center pt-[3px] text-[8px] font-extrabold leading-none">
-              {num}
-            </span>
-          </span>
-        );
+          );
+        };
         const toggle = (
           <div className="inline-flex h-7 bg-white border border-[#84cc16] rounded-md shrink-0 overflow-hidden">
             <button
@@ -136,7 +151,7 @@ export default function HomePage() {
               aria-label="달력 (3줄)"
               title="달력 (3줄)"
             >
-              {calIcon('3')}
+              {calRowsIcon(3)}
             </button>
             <button
               type="button"
@@ -146,7 +161,7 @@ export default function HomePage() {
               aria-label="달력 (6줄)"
               title="달력 (6줄)"
             >
-              {calIcon('6')}
+              {calRowsIcon(6)}
             </button>
             <button
               type="button"
