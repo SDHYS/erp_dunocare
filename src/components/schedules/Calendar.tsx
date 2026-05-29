@@ -123,8 +123,18 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
       {/* 헤더: 좌(새 일정 + 범례) / 중앙절대(년월) / 우(headerExtra) */}
       <div className="relative flex items-center px-2 lg:px-4 py-1 lg:py-2 border-b border-gray-100 gap-2 min-h-[40px]">
-        {/* 좌: 새 일정 등록 + 오전/오후 범례 */}
+        {/* 좌: 오전/오후 범례 + 새 일정 등록 */}
         <div className="shrink-0 flex items-center gap-2 z-10">
+          <div className="flex flex-col leading-none shrink-0 text-[9px] lg:text-[10px] text-gray-500 gap-0.5">
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#a78bfa' }} aria-hidden />
+              오전
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} aria-hidden />
+              오후
+            </span>
+          </div>
           {onCreateClick && (
             <button
               onClick={onCreateClick}
@@ -138,16 +148,6 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
               <span className="hidden lg:inline">{createLabel}</span>
             </button>
           )}
-          <div className="flex flex-col leading-none shrink-0 text-[9px] lg:text-[10px] text-gray-500 gap-0.5">
-            <span className="inline-flex items-center gap-1">
-              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#a78bfa' }} aria-hidden />
-              오전
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} aria-hidden />
-              오후
-            </span>
-          </div>
         </div>
 
         {/* spacer */}
@@ -289,8 +289,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — justify-start: 헤더 바로 아래 붙임 (cell 은 content 만큼만 자람) */}
-              <div className="flex-1 flex flex-col justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
+              {/* 일정 리스트 — 모바일: justify-center (상하 균등) / PC: justify-start (p-1 이 균등 보장) */}
+              <div className="flex-1 flex flex-col justify-center lg:justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
                 {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
               </div>
             </button>
