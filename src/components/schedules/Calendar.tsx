@@ -289,10 +289,30 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — 모바일: justify-center (상하 균등) / PC: justify-start (p-1 이 균등 보장) */}
-              <div className="flex-1 flex flex-col justify-center lg:justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
-                {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
-              </div>
+              {/* 일정 리스트
+                  모바일: justify-center (상하 균등)
+                  PC:     오전 상단 / 오후 하단 분리 (justify-between when both present) */}
+              {(() => {
+                const morningBlocks = visible.filter(s => getTimeSlot(s.maintenanceTime) === 'morning');
+                const afternoonBlocks = visible.filter(s => getTimeSlot(s.maintenanceTime) !== 'morning');
+                const lgJustify = morningBlocks.length && afternoonBlocks.length
+                  ? 'lg:justify-between'
+                  : afternoonBlocks.length ? 'lg:justify-end' : 'lg:justify-start';
+                return (
+                  <div className={`flex-1 flex flex-col justify-center ${lgJustify} gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden`}>
+                    {morningBlocks.length > 0 && (
+                      <div className="flex flex-col gap-[1px] lg:gap-[3px]">
+                        {morningBlocks.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
+                      </div>
+                    )}
+                    {afternoonBlocks.length > 0 && (
+                      <div className="flex flex-col gap-[1px] lg:gap-[3px]">
+                        {afternoonBlocks.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </button>
           );
         })}
