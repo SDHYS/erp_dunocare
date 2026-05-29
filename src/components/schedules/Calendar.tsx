@@ -291,8 +291,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — 시간 순서대로 헤더 아래 빈공간 없이 붙여 출력 */}
-              <div className="flex-1 flex flex-col justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
+              {/* 일정 리스트 — 모바일은 가운데 정렬(위아래 균등), PC 는 p-1 패딩으로 균등 */}
+              <div className="flex-1 flex flex-col justify-center lg:justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
                 {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
               </div>
             </button>
