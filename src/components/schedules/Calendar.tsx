@@ -45,10 +45,14 @@ function getTimeSlot(time: string): TimeSlot {
 }
 
 export default function Calendar({ schedules, selectedDate, onDateSelect, onCreateClick, createLabel = '새 일정 등록', todayCount, headerExtra, density = 'compact' }: CalendarProps) {
-  // 셀 높이: min-h 만 고정 (3줄 = 64/150). content 더 많으면 row 가 자동으로 늘어남
-  // → 3줄 모드 최적화 유지 + 6줄 모드는 일정 많은 row만 늘어남 (Google Calendar 방식)
+  // 3줄(compact): 원본 시그널디코드 포팅 상태 그대로 — h-[64px] lg:h-[150px], justify-start
+  // 6줄(expanded): 동일 규칙 + 셀 높이만 늘림 — h-[109px] lg:h-[268px]
+  //   · 109 = header 16 + items 6×14 + gaps 5×1 (105) + 4px 하단 (3줄 동일 비율)
+  //   · 268 = header 28 + p-1 (8) + items 6×36 + gaps 5×3 (267) + 1px
   const MAX_VISIBLE = density === 'expanded' ? 6 : 3;
-  const CELL_H_CLASS = 'min-h-[64px] lg:min-h-[150px]';
+  const CELL_H_CLASS = density === 'expanded'
+    ? 'h-[109px] lg:h-[268px]'
+    : 'h-[64px] lg:h-[150px]';
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
