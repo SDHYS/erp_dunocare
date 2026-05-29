@@ -50,12 +50,12 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
   // === compact (3개) ===
   //   모바일 64px:  header 16 + items 3×14 + gaps 2×1 = 60 (4px 하단 여백)
   //   PC 150px:    header 28 + p-1(8) + items 3×36 + gaps 2×3 = 150 (꽉)
-  // === expanded (6개) — 동일 비율 ===
-  //   모바일 112px: header 16 + items 6×14 + gaps 5×1 = 105 (+ 7px 하단 여백)
-  //   PC 268px:    header 28 + p-1(8) + items 6×36 + gaps 5×3 = 267 (1px 여백)
+  // === expanded (6개) — 3줄 정확히 동일 비율 (4px 하단 여백) ===
+  //   모바일 109px: header 16 + items 6×14 + gaps 5×1 = 105 + 4px 하단 여백 (3줄과 동일)
+  //   PC 268px:    header 28 + p-1(8) + items 6×36 + gaps 5×3 = 267 + 1px (3줄 0px 동일 비율)
   const MAX_VISIBLE = density === 'expanded' ? 6 : 3;
   const CELL_H_CLASS = density === 'expanded'
-    ? 'h-[112px] lg:h-[268px]'
+    ? 'h-[109px] lg:h-[268px]'
     : 'h-[64px] lg:h-[150px]';
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
@@ -290,8 +290,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — 모바일은 가운데 정렬(위아래 균등), PC 는 p-1 패딩으로 균등 */}
-              <div className="flex-1 flex flex-col justify-center lg:justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
+              {/* 일정 리스트 — 3줄/6줄 모두 헤더 아래 붙임(justify-start) + 하단 4px 여백 (셀 높이로 보장) */}
+              <div className="flex-1 flex flex-col justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
                 {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
               </div>
             </button>
