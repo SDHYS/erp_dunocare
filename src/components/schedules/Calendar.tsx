@@ -45,18 +45,10 @@ function getTimeSlot(time: string): TimeSlot {
 }
 
 export default function Calendar({ schedules, selectedDate, onDateSelect, onCreateClick, createLabel = '새 일정 등록', todayCount, headerExtra, density = 'compact' }: CalendarProps) {
-  // 셀 높이/가시 일정 수 — density 에 따라 동적
-  // 3줄(compact)의 여백 패턴을 그대로 유지해서 6줄(expanded) 계산
-  // === compact (3개) ===
-  //   모바일 64px:  header 16 + items 3×14 + gaps 2×1 = 60 (4px 하단 여백)
-  //   PC 150px:    header 28 + p-1(8) + items 3×36 + gaps 2×3 = 150 (꽉)
-  // === expanded (6개) — 3줄 정확히 동일 비율 (4px 하단 여백) ===
-  //   모바일 109px: header 16 + items 6×14 + gaps 5×1 = 105 + 4px 하단 여백 (3줄과 동일)
-  //   PC 268px:    header 28 + p-1(8) + items 6×36 + gaps 5×3 = 267 + 1px (3줄 0px 동일 비율)
+  // 셀 높이: min-h 만 고정 (3줄 = 64/150). content 더 많으면 row 가 자동으로 늘어남
+  // → 3줄 모드 최적화 유지 + 6줄 모드는 일정 많은 row만 늘어남 (Google Calendar 방식)
   const MAX_VISIBLE = density === 'expanded' ? 6 : 3;
-  const CELL_H_CLASS = density === 'expanded'
-    ? 'h-[109px] lg:h-[268px]'
-    : 'h-[64px] lg:h-[150px]';
+  const CELL_H_CLASS = 'min-h-[64px] lg:min-h-[150px]';
   const [currentMonth, setCurrentMonth] = useState(() => {
     const now = new Date();
     return { year: now.getFullYear(), month: now.getMonth() };
@@ -290,8 +282,8 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
                 )}
               </div>
 
-              {/* 일정 리스트 — justify-center: 상하 여백 균등 분배 */}
-              <div className="flex-1 flex flex-col justify-center gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
+              {/* 일정 리스트 — justify-start: 헤더 바로 아래 붙임 (cell 은 content 만큼만 자람) */}
+              <div className="flex-1 flex flex-col justify-start gap-[1px] lg:gap-[3px] p-0 lg:p-1 overflow-hidden">
                 {visible.map(s => <div key={s.id}>{renderSchedule(s)}</div>)}
               </div>
             </button>
