@@ -6,8 +6,8 @@ import { useAuth } from '@/store/authStore';
 
 // 데모/개발용 로그인 폼 prefill (NEXT_PUBLIC_ — 클라이언트 번들에 박힘)
 // ⚠️ 운영 launch 시 PW 는 반드시 비우거나 강한 비밀번호로 교체
-const DEMO_HINT_ID = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_ID || '';
-const DEMO_HINT_PW = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_PW || '';
+const DEMO_HINT_ID = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_ID || 'test';
+const DEMO_HINT_PW = process.env.NEXT_PUBLIC_DEV_LOGIN_HINT_PW || 'test';
 const KAKAO_ENABLED = !!process.env.NEXT_PUBLIC_KAKAO_REST_API_KEY;
 
 export default function LoginPage() {
