@@ -125,25 +125,24 @@ export default function Calendar({ schedules, selectedDate, onDateSelect, onCrea
 
   return (
     <div className="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
-      {/* 헤더: 좌(범례) / 중앙절대(년월) / 우(headerExtra + create) */}
+      {/* 헤더: 좌(여백) / 중앙절대(년월) / 우(범례 + headerExtra + create) */}
       <div className="relative flex items-center px-2 lg:px-4 py-1 lg:py-2 border-b border-gray-100 gap-2 min-h-[40px]">
-        {/* 좌: 오전/오후 세로 범례 */}
-        <div className="flex flex-col leading-none shrink-0 text-[9px] lg:text-[10px] text-gray-500 gap-0.5 z-10">
-          <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#a78bfa' }} aria-hidden />
-            오전
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} aria-hidden />
-            오후
-          </span>
-        </div>
-
-        {/* spacer (좌-우 사이) */}
+        {/* 좌: 빈 spacer (중앙 년월 절대정렬 균형용) */}
         <div className="flex-1" />
 
-        {/* 우: 새 일정 등록 + 보기 토글 (순서 변경) */}
-        <div className="shrink-0 flex items-center gap-1 z-10">
+        {/* 우: 오전/오후 범례 + 새 일정 등록 + 보기 토글 */}
+        <div className="shrink-0 flex items-center gap-2 z-10">
+          {/* 오전/오후 세로 범례 */}
+          <div className="flex flex-col leading-none shrink-0 text-[9px] lg:text-[10px] text-gray-500 gap-0.5">
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#a78bfa' }} aria-hidden />
+              오전
+            </span>
+            <span className="inline-flex items-center gap-1">
+              <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#fb923c' }} aria-hidden />
+              오후
+            </span>
+          </div>
           {onCreateClick && (
             <button
               onClick={onCreateClick}
