@@ -114,3 +114,31 @@ export interface AuthUser {
   storeId?: string;
   tier?: AdminTier;  // role === 'admin' 일 때만 의미 있음
 }
+
+// 정기 관리 항목 (필터/에어컨/커피머신 등)
+export interface MaintenanceItem {
+  id: string;
+  storeId: string;
+  category: string;          // 'filter' / 'aircon' / 'coffee_machine' / ...
+  typeDetail: string;        // '에버퓨어' / '파라곤' 등
+  installedAt: string;       // YYYY-MM-DD ('' = 미입력)
+  lastReplacedAt: string;    // YYYY-MM-DD
+  nextDueAt: string;         // YYYY-MM-DD
+  cycleMonths: number;
+  alertEnabled: boolean;
+  alertSentAt: string;       // ISO timestamp ('' = 미발송)
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MaintenanceHistory {
+  id: string;
+  itemId: string;
+  serviceDate: string;       // YYYY-MM-DD
+  cost: number;
+  assignee: string;
+  scheduleId: string;        // 연결된 일정 ID ('' = 미연결)
+  notes: string;
+  createdAt: string;
+}
