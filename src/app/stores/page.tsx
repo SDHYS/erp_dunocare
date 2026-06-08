@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useScheduleStore } from '@/store/scheduleStore';
 import { useAuth } from '@/store/authStore';
 import { apiFetch } from '@/lib/api';
-import type { Store, MaintenanceLog, ExtraItem } from '@/types';
+import type { Store, MaintenanceLog, ExtraItem, MaintenanceItem } from '@/types';
 import { useToast } from '@/components/ui/Toast';
+import { MAINTENANCE_CATEGORIES, getCategoryDef } from '@/lib/maintenance-categories';
 
 // hidden input의 JSON 문자열을 안전하게 파싱 (잘못된 JSON이어도 빈 배열)
 function parseJSONArray(value: FormDataEntryValue | null): ExtraItem[] {
@@ -433,8 +434,11 @@ function StoreDetailPanel({ storeId, store, onClose }: { storeId: string; store:
         </button>
       </div>
 
+      {/* 정기 관리 항목 (필터/에어컨/커피머신 교체 주기) */}
+      <MaintenanceItemsSection storeId={store.id} />
+
       {/* Maintenance Logs */}
-      <div className="p-5">
+      <div className="p-5 border-t border-gray-100">
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-sm font-semibold text-gray-800">정비이력</h4>
           <button
@@ -762,5 +766,407 @@ function StoreField({ name, label, type = 'text', defaultValue, required }: {
       <span className="text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500 ml-1">*</span>}</span>
       <input name={name} type={type} defaultValue={defaultValue} required={required} className="input mt-1" />
     </label>
+  );
+}
+
+// ============================================================
+// 정기 관리 항목 (필터/에어컨/커피머신 등) — 등록/수정/삭제/이력
+// ============================================================
+
+function daysBetweenToday(target: string): number {
+  if (!target) return Infinity;
+  const t = new Date(target).getTime();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.ceil((t - today.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function DueBadge({ nextDueAt }: { nextDueAt: string }) {
+  if (!nextDueAt) return <span className="text-[10px] text-gray-400">미설정</span>;
+  const days = daysBetweenToday(nextDueAt);
+  if (days < 0) return <span className="text-[10px] font-bold text-red-600">{Math.abs(days)}일 지남</span>;
+  if (days === 0) return <span className="text-[10px] font-bold text-orange-600">오늘</span>;
+  if (days <= 30) return <span className="text-[10px] font-bold text-orange-500">D-{days}</span>;
+  return <span className="text-[10px] font-medium text-gray-500">D-{days}</span>;
+}
+
+function MaintenanceItemsSection({ storeId }: { storeId: string }) {
+  const { toast, confirm } = useToast();
+  const { isAdmin, user } = useAuth();
+  const isStoreSelf = user?.role === 'store';
+  const canEdit = isAdmin || isStoreSelf;
+
+  const [items, setItems] = useState<MaintenanceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<MaintenanceItem | null>(null);
+  const [showHistoryFor, setShowHistoryFor] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch(`/api/stores/${storeId}/maintenance-items`);
+      if (res.ok) setItems(await res.json());
+    } catch {/* noop */}
+    finally { setLoading(false); }
+  }, [storeId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleDelete = async (id: string) => {
+    const ok = await confirm('이 정기 관리 항목을 삭제하시겠습니까?', { confirmText: '삭제', danger: true });
+    if (!ok) return;
+    try {
+      const res = await apiFetch(`/api/maintenance-items/${id}`, { method: 'DELETE' });
+      if (res.ok) { toast('삭제되었습니다.', 'success'); load(); }
+      else toast('삭제 실패', 'error');
+    } catch { toast('네트워크 오류', 'error'); }
+  };
+
+  return (
+    <div className="p-5">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-semibold text-gray-800">정기 관리 항목</h4>
+          <span className="text-[10px] text-gray-400">({items.length}개 · 알림 자동)</span>
+        </div>
+        {canEdit && (
+          <button
+            onClick={() => { setEditing(null); setShowForm(true); }}
+            className="text-xs px-2 py-1 bg-primary text-white rounded-lg hover:bg-primary-hover"
+          >
+            + 항목 추가
+          </button>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-gray-400 py-4 text-center">불러오는 중...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-gray-400 py-4 text-center">등록된 정기 관리 항목이 없습니다.</p>
+      ) : (
+        <div className="space-y-2">
+          {items.map(item => {
+            const def = getCategoryDef(item.category);
+            return (
+              <div key={item.id} className="bg-gray-50 rounded-lg p-3 text-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-semibold text-gray-900">{def?.label || item.category}</span>
+                      {item.typeDetail && <span className="text-xs text-gray-600">· {item.typeDetail}</span>}
+                      <DueBadge nextDueAt={item.nextDueAt} />
+                      {!item.alertEnabled && <span className="text-[10px] text-gray-400">알림 OFF</span>}
+                    </div>
+                    <div className="mt-1 text-[11px] text-gray-500 flex gap-3 flex-wrap">
+                      {item.installedAt && <span>설치 {item.installedAt}</span>}
+                      {item.lastReplacedAt && <span>최근 교체 {item.lastReplacedAt}</span>}
+                      {item.nextDueAt && <span>다음 예정 {item.nextDueAt}</span>}
+                      <span>주기 {item.cycleMonths}개월</span>
+                    </div>
+                    {item.notes && <p className="mt-1 text-[11px] text-gray-500">메모: {item.notes}</p>}
+                  </div>
+                  <div className="shrink-0 flex flex-col items-end gap-1">
+                    {canEdit && (
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => { setEditing(item); setShowForm(true); }}
+                          className="text-[11px] px-2 py-1 hover:bg-white rounded text-gray-600"
+                        >수정</button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id)}
+                          className="text-[11px] px-2 py-1 hover:bg-red-50 rounded text-red-500"
+                        >삭제</button>
+                      </div>
+                    )}
+                    {(isAdmin || user?.role === 'team') && (
+                      <button
+                        type="button"
+                        onClick={() => setShowHistoryFor(showHistoryFor === item.id ? null : item.id)}
+                        className="text-[11px] px-2 py-1 bg-primary/10 hover:bg-primary/20 rounded text-primary font-semibold"
+                      >
+                        {showHistoryFor === item.id ? '닫기' : '이력 / 교체 기록'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {showHistoryFor === item.id && (
+                  <HistoryPanel itemId={item.id} onAdded={() => { load(); }} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {showForm && (
+        <MaintenanceItemForm
+          storeId={storeId}
+          editing={editing}
+          onClose={() => { setShowForm(false); setEditing(null); }}
+          onSaved={() => { setShowForm(false); setEditing(null); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+function MaintenanceItemForm({ storeId, editing, onClose, onSaved }: {
+  storeId: string;
+  editing: MaintenanceItem | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const [category, setCategory] = useState(editing?.category || 'filter');
+  const [typeDetail, setTypeDetail] = useState(editing?.typeDetail || '');
+  const [installedAt, setInstalledAt] = useState(editing?.installedAt || '');
+  const [lastReplacedAt, setLastReplacedAt] = useState(editing?.lastReplacedAt || '');
+  const [cycleMonths, setCycleMonths] = useState(editing?.cycleMonths || 6);
+  const [nextDueAt, setNextDueAt] = useState(editing?.nextDueAt || '');
+  const [alertEnabled, setAlertEnabled] = useState(editing?.alertEnabled ?? true);
+  const [notes, setNotes] = useState(editing?.notes || '');
+  const [submitting, setSubmitting] = useState(false);
+
+  const def = getCategoryDef(category);
+
+  useEffect(() => {
+    if (!editing && def) setCycleMonths(def.defaultCycle);
+  }, [category, def, editing]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    const url = editing
+      ? `/api/maintenance-items/${editing.id}`
+      : `/api/stores/${storeId}/maintenance-items`;
+    const method = editing ? 'PUT' : 'POST';
+    try {
+      const res = await apiFetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category, typeDetail,
+          installedAt: installedAt || null,
+          lastReplacedAt: lastReplacedAt || null,
+          nextDueAt: nextDueAt || null,
+          cycleMonths: Number(cycleMonths) || 6,
+          alertEnabled, notes,
+        }),
+      });
+      if (res.ok) { toast(editing ? '수정되었습니다.' : '등록되었습니다.', 'success'); onSaved(); }
+      else {
+        const body = await res.json().catch(() => ({}));
+        toast(body.error || '저장 실패', 'error');
+        setSubmitting(false);
+      }
+    } catch {
+      toast('네트워크 오류', 'error');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <form
+        onClick={e => e.stopPropagation()}
+        onSubmit={handleSubmit}
+        className="bg-white rounded-xl max-w-md w-full p-5 space-y-3 max-h-[90vh] overflow-y-auto"
+      >
+        <h3 className="text-base font-bold text-gray-900">{editing ? '정기 관리 항목 수정' : '정기 관리 항목 추가'}</h3>
+
+        <label className="block">
+          <span className="text-xs font-medium text-gray-700">카테고리</span>
+          <select value={category} onChange={e => setCategory(e.target.value)} className="input mt-1">
+            {MAINTENANCE_CATEGORIES.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-gray-700">세부 종류 (브랜드/모델)</span>
+          {def && def.typeOptions.length > 0 ? (
+            <select value={typeDetail} onChange={e => setTypeDetail(e.target.value)} className="input mt-1">
+              <option value="">선택</option>
+              {def.typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+              {!def.typeOptions.includes(typeDetail) && typeDetail && (
+                <option value={typeDetail}>{typeDetail} (직접입력)</option>
+              )}
+            </select>
+          ) : (
+            <input value={typeDetail} onChange={e => setTypeDetail(e.target.value)} className="input mt-1" placeholder="브랜드/모델명 입력" />
+          )}
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs font-medium text-gray-700">설치일</span>
+            <input type="date" value={installedAt} onChange={e => setInstalledAt(e.target.value)} className="input mt-1" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-gray-700">최근 교체일</span>
+            <input type="date" value={lastReplacedAt} onChange={e => setLastReplacedAt(e.target.value)} className="input mt-1" />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="text-xs font-medium text-gray-700">교체 주기 (개월)</span>
+            <input type="number" min={1} max={60} value={cycleMonths} onChange={e => setCycleMonths(Number(e.target.value))} className="input mt-1" />
+          </label>
+          <label className="block">
+            <span className="text-xs font-medium text-gray-700">다음 예정일 (선택)</span>
+            <input type="date" value={nextDueAt} onChange={e => setNextDueAt(e.target.value)} className="input mt-1" />
+          </label>
+        </div>
+        <p className="text-[10px] text-gray-400 -mt-1">※ 다음 예정일 비워두면 「최근 교체일 + 주기」 로 자동 계산</p>
+
+        <label className="block">
+          <span className="text-xs font-medium text-gray-700">메모</span>
+          <textarea value={notes} onChange={e => setNotes(e.target.value)} className="input mt-1" rows={2} maxLength={1000} />
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={alertEnabled} onChange={e => setAlertEnabled(e.target.checked)} className="w-4 h-4" />
+          <span className="text-xs text-gray-700">교체일 한 달 전 알림 받기 (카카오톡/SMS)</span>
+        </label>
+
+        <div className="flex gap-2 pt-2">
+          <button type="button" onClick={onClose} className="flex-1 py-2 border border-gray-300 rounded-lg text-sm">취소</button>
+          <button type="submit" disabled={submitting} className="flex-1 py-2 bg-primary text-white rounded-lg text-sm disabled:opacity-50">
+            {submitting ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+interface MaintenanceHistoryEntry {
+  id: string;
+  itemId: string;
+  serviceDate: string;
+  cost: number;
+  assignee: string;
+  scheduleId: string;
+  notes: string;
+  createdAt: string;
+}
+
+function HistoryPanel({ itemId, onAdded }: { itemId: string; onAdded: () => void }) {
+  const { toast } = useToast();
+  const { user, isAdmin } = useAuth();
+  const canRecord = isAdmin || user?.role === 'team';
+  const [history, setHistory] = useState<MaintenanceHistoryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [serviceDate, setServiceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [cost, setCost] = useState(0);
+  const [assignee, setAssignee] = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch(`/api/maintenance-items/${itemId}/history`);
+      if (res.ok) setHistory(await res.json());
+    } catch {}
+    finally { setLoading(false); }
+  }, [itemId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const res = await apiFetch(`/api/maintenance-items/${itemId}/history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceDate, cost: Number(cost) || 0, assignee, notes }),
+      });
+      if (res.ok) {
+        toast('교체 이력이 기록되었습니다.', 'success');
+        setShowForm(false);
+        setCost(0); setAssignee(''); setNotes('');
+        load();
+        onAdded();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        toast(body.error || '실패', 'error');
+        setSubmitting(false);
+      }
+    } catch {
+      toast('네트워크 오류', 'error');
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+      <div className="flex items-center justify-between">
+        <h5 className="text-xs font-semibold text-gray-700">교체 이력 ({history.length}건)</h5>
+        {canRecord && !showForm && (
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-[11px] px-2 py-1 bg-primary text-white rounded hover:bg-primary-hover"
+          >+ 교체 기록</button>
+        )}
+      </div>
+
+      {showForm && canRecord && (
+        <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded p-2 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="text-[10px] text-gray-500">작업일</span>
+              <input type="date" value={serviceDate} onChange={e => setServiceDate(e.target.value)} required className="input text-xs" />
+            </label>
+            <label className="block">
+              <span className="text-[10px] text-gray-500">비용 (원)</span>
+              <input type="number" min={0} value={cost} onChange={e => setCost(Number(e.target.value))} className="input text-xs" />
+            </label>
+          </div>
+          <label className="block">
+            <span className="text-[10px] text-gray-500">담당 기사</span>
+            <input value={assignee} onChange={e => setAssignee(e.target.value)} className="input text-xs" placeholder="이름" />
+          </label>
+          <label className="block">
+            <span className="text-[10px] text-gray-500">메모</span>
+            <input value={notes} onChange={e => setNotes(e.target.value)} className="input text-xs" placeholder="작업 내역" />
+          </label>
+          <div className="flex gap-1">
+            <button type="button" onClick={() => setShowForm(false)} className="flex-1 text-xs py-1 border border-gray-300 rounded">취소</button>
+            <button type="submit" disabled={submitting} className="flex-1 text-xs py-1 bg-primary text-white rounded disabled:opacity-50">
+              {submitting ? '저장 중...' : '기록'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <p className="text-[11px] text-gray-400">불러오는 중...</p>
+      ) : history.length === 0 ? (
+        <p className="text-[11px] text-gray-400">기록된 이력이 없습니다.</p>
+      ) : (
+        <div className="space-y-1 max-h-48 overflow-y-auto">
+          {history.map(h => (
+            <div key={h.id} className="bg-white border border-gray-200 rounded px-2 py-1 text-[11px]">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-700">{h.serviceDate}</span>
+                {h.cost > 0 && <span className="text-gray-600">{h.cost.toLocaleString()}원</span>}
+              </div>
+              <div className="text-gray-500">
+                {h.assignee && <span>담당: {h.assignee} </span>}
+                {h.notes && <span>· {h.notes}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
